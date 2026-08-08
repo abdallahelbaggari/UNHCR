@@ -1,0 +1,2032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="assets/icons/logo.svg"><link rel="apple-touch-icon" href="assets/icons/logo.svg"><link rel="manifest" href="manifest.json">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0A1628">
+<title>UNHCR.pi</title>
+<script src="https://sdk.minepi.com/pi-sdk.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;font-family:system-ui,-apple-system,sans-serif;background:#0A1628;color:#F0F6FF;font-size:16px}
+button{font-family:inherit;cursor:pointer;touch-action:manipulation;border:none;background:none}
+input,textarea,select{font-family:inherit;color:#F0F6FF;background:none;border:none;outline:none}
+a{color:#0ea5e9;text-decoration:none}
+
+/* \u2550\u2550\u2550 LAYOUT \u2550\u2550\u2550 */
+#app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+#hdr{background:rgba(10,22,40,.97);border-bottom:1px solid rgba(255,255,255,.07);padding:.5rem 1rem;display:flex;align-items:center;justify-content:space-between;height:54px;flex-shrink:0}
+.brand{font-size:1.1rem;font-weight:900;letter-spacing:-.03em}.brand b{color:#0ea5e9}
+.hdr-r{display:flex;gap:.35rem;align-items:center}
+.hdr-btn{width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:.9rem;cursor:pointer;min-height:38px;position:relative}
+.hdr-btn:active{background:rgba(255,255,255,.1)}
+#hdr-av{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#1a56db,#0ea5e9);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;cursor:pointer;box-shadow:0 2px 12px rgba(26,86,219,.35)}
+.notif-dot{position:absolute;top:4px;right:4px;width:9px;height:9px;background:#ef4444;border-radius:50%;border:2px solid #0A1628}
+#main{flex:1;overflow:hidden;position:relative;min-height:0}
+.scr{display:none;flex-direction:column;height:100%;overflow:hidden}
+.scr.on{display:flex;animation:fu .16s ease}
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:88px;overscroll-behavior-y:contain}
+.scroll::-webkit-scrollbar{display:none}
+
+/* \u2550\u2550\u2550 NAV \u2550\u2550\u2550 */
+#nav{position:fixed;bottom:0;left:0;right:0;height:76px;background:rgba(10,22,40,.98);border-top:1px solid rgba(255,255,255,.08);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom,0)}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.2rem;cursor:pointer;border:none;background:none;color:rgba(240,246,255,.28);font-size:.5rem;font-weight:700;min-height:76px;touch-action:manipulation;padding:.4rem .1rem;position:relative;transition:color .15s}
+.nb.on{color:#0ea5e9}
+.nb:active{opacity:.6}
+.nb-i{font-size:1.6rem;line-height:1}
+.nb-pip{position:absolute;top:3px;left:50%;transform:translateX(-50%);width:20px;height:3px;border-radius:2px;background:#0ea5e9;opacity:0;transition:opacity .2s}
+.nb.on .nb-pip{opacity:1}
+
+/* \u2550\u2550\u2550 OVERLAY \u2550\u2550\u2550 */
+#ov{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:200;display:none;align-items:flex-end;backdrop-filter:blur(5px)}
+#ov.open{display:flex;animation:fadeIn .18s ease}
+.panel{width:100%;background:#0d1e38;border-radius:22px 22px 0 0;border-top:1px solid rgba(255,255,255,.09);max-height:92vh;display:flex;flex-direction:column;animation:slideUp .24s cubic-bezier(.22,1,.36,1)}
+.phandle{width:34px;height:3.5px;border-radius:2px;background:rgba(255,255,255,.12);margin:.6rem auto .3rem;flex-shrink:0}
+.phead{display:flex;align-items:center;justify-content:space-between;padding:.4rem 1rem .55rem;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
+.ptitle{font-size:.88rem;font-weight:800;color:#F0F6FF}
+.pclose{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.78rem;color:rgba(240,246,255,.4);border:none;min-height:32px}
+.pclose:active{background:rgba(255,255,255,.12)}
+.pbody{overflow-y:auto;padding:.65rem 1rem 2.5rem;flex:1}
+.pbody::-webkit-scrollbar{display:none}
+
+/* \u2550\u2550\u2550 TOAST \u2550\u2550\u2550 */
+#toast{position:fixed;bottom:86px;left:50%;transform:translateX(-50%) translateY(8px);background:#1a2d4a;border:1px solid rgba(255,255,255,.1);color:#F0F6FF;font-size:.58rem;font-weight:600;padding:.4rem 1.1rem;border-radius:99px;opacity:0;transition:all .22s;pointer-events:none;z-index:999;white-space:nowrap;max-width:88vw;overflow:hidden;text-overflow:ellipsis}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.s{background:rgba(16,185,129,.2);color:#10b981;border-color:rgba(16,185,129,.3)}
+#toast.e{background:rgba(239,68,68,.18);color:#ef4444;border-color:rgba(239,68,68,.28)}
+#toast.w{background:rgba(245,158,11,.15);color:#f59e0b;border-color:rgba(245,158,11,.28)}
+
+/* \u2550\u2550\u2550 CARDS \u2550\u2550\u2550 */
+.card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:.9rem 1rem;margin-bottom:.75rem}
+.card-blue{background:linear-gradient(135deg,rgba(26,86,219,.16),rgba(14,165,233,.08));border-color:rgba(14,165,233,.25)}
+.card-red{background:rgba(239,68,68,.09);border-color:rgba(239,68,68,.2)}
+.card-green{background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.2)}
+.card-orange{background:rgba(245,158,11,.09);border-color:rgba(245,158,11,.2)}
+.card-purple{background:rgba(124,58,237,.1);border-color:rgba(124,58,237,.22)}
+.card-teal{background:rgba(13,148,136,.1);border-color:rgba(13,148,136,.25)}
+
+/* \u2550\u2550\u2550 SECTION LABELS \u2550\u2550\u2550 */
+.sec{padding:.75rem 1rem .28rem;font-size:.48rem;font-weight:700;color:rgba(240,246,255,.32);letter-spacing:.13em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
+.sact{font-size:.52rem;font-weight:700;color:#0ea5e9;cursor:pointer;letter-spacing:0;text-transform:none}
+
+/* \u2550\u2550\u2550 GRID \u2550\u2550\u2550 */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;padding:.05rem 1rem .35rem}
+.gc{border-radius:16px;padding:.9rem .8rem;min-height:108px;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;touch-action:manipulation;border:1.5px solid transparent;position:relative;overflow:hidden}
+.gc:active{opacity:.72;transform:scale(.97)}
+.gc-ico{font-size:1.6rem;margin-bottom:.3rem}
+.gc-t{font-size:.64rem;font-weight:800;color:#F0F6FF;line-height:1.25;margin-bottom:.06rem}
+.gc-s{font-size:.42rem;color:rgba(240,246,255,.52);line-height:1.4}
+.gc-shine{position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.06),transparent 55%);pointer-events:none}
+
+/* \u2550\u2550\u2550 RESOURCE ROWS \u2550\u2550\u2550 */
+.res{display:flex;align-items:center;gap:.65rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:.75rem .85rem;margin-bottom:.32rem;cursor:pointer;min-height:60px;touch-action:manipulation}
+.res:active{background:rgba(255,255,255,.08)}
+.res-ico{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.res-body{flex:1;min-width:0}
+.res-t{font-size:.64rem;font-weight:700;color:#F0F6FF}
+.res-s{font-size:.44rem;color:rgba(240,246,255,.42);margin-top:.04rem}
+.res-a{font-size:.85rem;color:rgba(240,246,255,.22);flex-shrink:0}
+
+/* \u2550\u2550\u2550 PILLS \u2550\u2550\u2550 */
+.pill{display:inline-flex;align-items:center;font-size:.38rem;font-weight:700;border-radius:99px;padding:.06rem .28rem}
+.pb{background:rgba(14,165,233,.16);color:#0ea5e9;border:1px solid rgba(14,165,233,.28)}
+.pr{background:rgba(239,68,68,.14);color:#ef4444;border:1px solid rgba(239,68,68,.22)}
+.pg{background:rgba(16,185,129,.14);color:#10b981;border:1px solid rgba(16,185,129,.22)}
+.po{background:rgba(245,158,11,.14);color:#f59e0b;border:1px solid rgba(245,158,11,.22)}
+.pp{background:rgba(124,58,237,.14);color:#8b5cf6;border:1px solid rgba(124,58,237,.22)}
+
+/* \u2550\u2550\u2550 FORMS \u2550\u2550\u2550 */
+.inp{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:.65rem .85rem;font-size:.75rem;color:#F0F6FF;margin-bottom:.45rem;min-height:50px;display:block;transition:border-color .15s}
+.inp:focus{border-color:#0ea5e9;background:rgba(14,165,233,.05)}
+.inp::placeholder{color:rgba(240,246,255,.22)}
+select.inp option{background:#0d1e38;color:#F0F6FF}
+.fl{font-size:.48rem;font-weight:700;color:rgba(240,246,255,.38);display:block;margin-bottom:.18rem;text-transform:uppercase;letter-spacing:.06em}
+.btn-p{width:100%;padding:.85rem;background:linear-gradient(135deg,#1a56db,#0ea5e9);border:none;border-radius:12px;color:#fff;font-size:.85rem;font-weight:700;min-height:52px;margin-top:.3rem;box-shadow:0 4px 20px rgba(26,86,219,.32);cursor:pointer;touch-action:manipulation}
+.btn-p:active{opacity:.8}
+.btn-o{width:100%;padding:.75rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;color:rgba(240,246,255,.7);font-size:.8rem;min-height:48px;margin-top:.3rem;cursor:pointer;touch-action:manipulation}
+.btn-o:active{opacity:.75}
+.btn-red{width:100%;padding:.8rem;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:12px;color:#ef4444;font-size:.82rem;font-weight:600;min-height:48px;cursor:pointer;touch-action:manipulation}
+
+/* \u2550\u2550\u2550 STATS STRIP \u2550\u2550\u2550 */
+.stats-strip{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.4rem;padding:0 1rem;margin:.35rem 0}
+.stat-tile{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:.55rem .4rem;text-align:center;cursor:pointer;touch-action:manipulation;min-height:58px}
+.stat-tile:active{background:rgba(255,255,255,.09)}
+.stat-v{font-size:.95rem;font-weight:800;color:#0ea5e9;line-height:1}
+.stat-l{font-size:.38rem;color:rgba(240,246,255,.35);margin-top:.06rem;text-transform:uppercase;letter-spacing:.06em;line-height:1.3}
+
+/* \u2550\u2550\u2550 PROFILE ROWS \u2550\u2550\u2550 */
+.pr-row{display:flex;align-items:center;gap:.6rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:.72rem .85rem;cursor:pointer;min-height:56px;margin-bottom:.3rem;touch-action:manipulation;border:none;width:100%;text-align:left;color:#F0F6FF;background:rgba(255,255,255,.04)}
+.pr-row:active{background:rgba(255,255,255,.08)}
+.pr-ico{width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.pr-t{font-size:.64rem;font-weight:700;color:#F0F6FF}
+.pr-s{font-size:.44rem;color:rgba(240,246,255,.38);margin-top:.04rem}
+.pr-a{margin-left:auto;font-size:.88rem;color:rgba(240,246,255,.22);flex-shrink:0}
+
+/* \u2550\u2550\u2550 ADVANCED COMPONENTS \u2550\u2550\u2550 */
+/* Alert banners */
+.alert-card{border-radius:14px;padding:.85rem 1rem;margin-bottom:.45rem;position:relative;overflow:hidden;cursor:pointer}
+.alert-card:active{opacity:.8}
+.alert-title{font-size:.65rem;font-weight:800;margin-bottom:.12rem}
+.alert-body{font-size:.5rem;color:rgba(240,246,255,.58);line-height:1.72}
+.alert-tag{font-size:.36rem;font-weight:700;border-radius:99px;padding:.05rem .28rem;text-transform:uppercase;letter-spacing:.04em;display:inline-flex;align-items:center;margin-top:.3rem}
+
+/* Mood */
+.mood-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.35rem;margin:.4rem 0}
+.mood-btn{border-radius:12px;padding:.6rem .25rem;display:flex;flex-direction:column;align-items:center;gap:.15rem;cursor:pointer;border:1.5px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);min-height:62px;touch-action:manipulation;transition:all .15s}
+.mood-btn:active{transform:scale(.9)}
+.mood-btn.sel{border-color:rgba(14,165,233,.5);background:rgba(14,165,233,.12)}
+.mood-ico{font-size:1.5rem;line-height:1}
+.mood-lbl{font-size:.38rem;font-weight:600;color:rgba(240,246,255,.45)}
+.mood-bar-wrap{display:flex;align-items:flex-end;gap:3px;height:52px;margin:.4rem 0}
+.mood-bar{flex:1;border-radius:3px 3px 0 0;min-height:4px;transition:height .4s ease}
+
+/* Doc checklist */
+.doc-item{display:flex;align-items:center;gap:.6rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:.65rem .85rem;margin-bottom:.28rem;cursor:pointer;min-height:52px;touch-action:manipulation;transition:all .15s}
+.doc-item.done{background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.22)}
+.doc-chk{width:26px;height:26px;border-radius:7px;border:2px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.85rem;transition:all .15s}
+.doc-item.done .doc-chk{background:#10b981;border-color:#10b981}
+.doc-label{font-size:.6rem;font-weight:600;color:#F0F6FF;flex:1}
+.doc-sub{font-size:.42rem;color:rgba(240,246,255,.38);margin-top:.03rem}
+
+/* Progress ring */
+.pring{position:relative;width:76px;height:76px;flex-shrink:0}
+.pring svg{transform:rotate(-90deg)}
+.pring-val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;color:#0ea5e9}
+
+/* Phrase cards */
+.phrase-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:.75rem .9rem;margin-bottom:.32rem;cursor:pointer;touch-action:manipulation}
+.phrase-card:active{background:rgba(255,255,255,.08)}
+.phr-en{font-size:.65rem;font-weight:700;color:#F0F6FF;margin-bottom:.16rem}
+.phr-tr{font-size:.6rem;color:#0ea5e9;font-weight:600;margin-bottom:.06rem}
+.phr-ph{font-size:.48rem;color:rgba(240,246,255,.38);font-style:italic}
+
+/* Symptom */
+.sym-opt{background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.09);border-radius:10px;padding:.58rem .8rem;font-size:.6rem;font-weight:600;color:#F0F6FF;cursor:pointer;min-height:46px;margin-bottom:.28rem;width:100%;text-align:left;touch-action:manipulation;transition:all .15s}
+.sym-opt:active{background:rgba(255,255,255,.1)}
+.sym-opt.sel{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.35);color:#fca5a5}
+
+/* Services */
+.svc-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:.78rem .9rem;margin-bottom:.35rem}
+.svc-name{font-size:.65rem;font-weight:700;color:#F0F6FF}
+.svc-type{font-size:.44rem;color:#0ea5e9;margin:.04rem 0}
+.svc-addr{font-size:.44rem;color:rgba(240,246,255,.42)}
+.svc-phone{font-size:.44rem;color:rgba(240,246,255,.42);margin-top:.03rem}
+
+/* Notice */
+.notice-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:.78rem .9rem;margin-bottom:.35rem}
+.notice-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.18rem}
+.notice-title{font-size:.62rem;font-weight:700;color:#F0F6FF;flex:1;margin-right:.4rem}
+.notice-date{font-size:.4rem;color:rgba(240,246,255,.32);flex-shrink:0}
+.notice-body{font-size:.5rem;color:rgba(240,246,255,.52);line-height:1.75;margin-bottom:.28rem}
+.notice-foot{display:flex;justify-content:space-between;align-items:center}
+.notice-author{font-size:.42rem;color:rgba(240,246,255,.3)}
+
+/* Timeline */
+.tl-item{display:flex;gap:.65rem;margin-bottom:.55rem}
+.tl-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;margin-top:.18rem}
+.tl-body{flex:1;padding-bottom:.45rem;border-bottom:1px solid rgba(255,255,255,.05)}
+.tl-year{font-size:.7rem;font-weight:800;margin-bottom:.06rem}
+.tl-title{font-size:.6rem;font-weight:700;color:#F0F6FF}
+.tl-text{font-size:.48rem;color:rgba(240,246,255,.45);line-height:1.65;margin-top:.04rem}
+
+/* Search */
+.srch-inp{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:99px;padding:.5rem 1rem;font-size:.64rem;color:#F0F6FF;min-height:44px;transition:border-color .15s}
+.srch-inp:focus{border-color:#0ea5e9;outline:none}
+.srch-inp::placeholder{color:rgba(240,246,255,.22)}
+
+/* News / updates */
+.update-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:.85rem;margin-bottom:.4rem;display:flex;align-items:flex-start;gap:.65rem}
+.update-ico{font-size:1.4rem;flex-shrink:0;margin-top:.05rem}
+.update-body{flex:1}
+.update-t{font-size:.62rem;font-weight:700;color:#F0F6FF;margin-bottom:.12rem}
+.update-s{font-size:.48rem;color:rgba(240,246,255,.5);line-height:1.72;margin-bottom:.25rem}
+
+/* Lang pills */
+.lang-row{display:flex;gap:.28rem;flex-wrap:wrap;margin:.3rem 0}
+.lpill{background:rgba(14,165,233,.09);border:1px solid rgba(14,165,233,.22);border-radius:99px;padding:.2rem .52rem;font-size:.44rem;font-weight:700;color:#0ea5e9;cursor:pointer;touch-action:manipulation}
+.lpill.on{background:rgba(14,165,233,.22);border-color:rgba(14,165,233,.45)}
+
+/* Empty */
+.empty{text-align:center;padding:3rem 1.5rem}
+.empty-i{font-size:3rem;display:block;margin-bottom:.6rem}
+.empty-t{font-size:.85rem;font-weight:800;margin-bottom:.28rem}
+.empty-s{font-size:.58rem;color:rgba(240,246,255,.35);line-height:1.8}
+
+/* Searchbar wrapper */
+.srch-wrap{padding:.35rem 1rem .2rem}
+
+/* AI bubble */
+.ai-msg{background:rgba(14,165,233,.09);border:1px solid rgba(14,165,233,.2);border-radius:12px;padding:.7rem .85rem;margin-bottom:.4rem;font-size:.55rem;color:rgba(240,246,255,.75);line-height:1.85}
+.ai-msg b{color:#0ea5e9}
+
+/* map placeholder */
+.map-ph{background:rgba(14,165,233,.07);border:1px solid rgba(14,165,233,.18);border-radius:14px;height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;margin-bottom:.5rem;cursor:pointer}
+.map-ph-i{font-size:2.2rem}
+.map-ph-t{font-size:.6rem;font-weight:700;color:#0ea5e9}
+.map-ph-s{font-size:.46rem;color:rgba(240,246,255,.35)}
+
+/* Scam / security check item */
+.sec-item{display:flex;align-items:flex-start;gap:.6rem;padding:.55rem 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.55rem;color:rgba(240,246,255,.65);line-height:1.75}
+.sec-item:last-child{border-bottom:none}
+.sec-ico{font-size:1rem;flex-shrink:0;margin-top:.05rem}
+
+/* Survival/guide list */
+.guide-item{display:flex;align-items:flex-start;gap:.55rem;padding:.45rem 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.54rem;color:rgba(240,246,255,.65);line-height:1.72}
+.guide-item:last-child{border-bottom:none}
+.guide-num{width:22px;height:22px;border-radius:50%;background:rgba(14,165,233,.2);border:1px solid rgba(14,165,233,.35);display:flex;align-items:center;justify-content:center;font-size:.44rem;font-weight:800;color:#0ea5e9;flex-shrink:0;margin-top:.05rem}
+
+/* FAQ */
+.faq-item{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:.7rem .85rem;margin-bottom:.3rem;cursor:pointer}
+.faq-q{font-size:.6rem;font-weight:700;color:#F0F6FF;display:flex;justify-content:space-between;align-items:center}
+.faq-a{font-size:.52rem;color:rgba(240,246,255,.55);line-height:1.75;margin-top:.3rem;display:none}
+.faq-item.open .faq-a{display:block}
+
+/* Sbar */
+.sbar{padding:.6rem 1rem .25rem;display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0}
+.sbar-t{font-size:1.1rem;font-weight:800;letter-spacing:-.02em}
+.sbar-s{font-size:.44rem;color:rgba(240,246,255,.38);margin-top:.06rem}
+
+/* SOS */
+.sos-banner{background:linear-gradient(135deg,rgba(239,68,68,.2),rgba(239,68,68,.08));border:2px solid rgba(239,68,68,.45);border-radius:16px;padding:1rem;margin:0 1rem .5rem;text-align:center}
+.sos-title{font-size:.78rem;font-weight:800;color:#fca5a5;margin:.35rem 0 .2rem}
+.sos-sub{font-size:.5rem;color:rgba(240,246,255,.55);line-height:1.75;margin-bottom:.6rem}
+.sos-btn{background:rgba(239,68,68,.25);border:1.5px solid rgba(239,68,68,.5);border-radius:10px;padding:.6rem 1.2rem;color:#fca5a5;font-size:.7rem;font-weight:700;cursor:pointer;min-height:44px;touch-action:manipulation}
+.sos-btn:active{opacity:.8}
+
+/* Coming soon badge */
+.cs-badge{display:inline-flex;align-items:center;font-size:.36rem;font-weight:700;border-radius:99px;padding:.04rem .26rem;background:rgba(245,158,11,.14);color:#f59e0b;border:1px solid rgba(245,158,11,.28);margin-left:.3rem}
+
+/* Animations */
+@keyframes fu{from{opacity:.01;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(48px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hdr">
+    <div class="brand" style="display:flex;align-items:center;gap:.35rem"><img src="assets/icons/logo.svg" alt="" style="width:24px;height:24px;filter:drop-shadow(0 0 5px rgba(14,165,233,.45))">UNHCR<b>.pi</b></div>
+    <div class="hdr-r">
+      <div class="hdr-btn" onclick="openSearch()">&#x1F50D;</div>
+      <div class="hdr-btn" id="alert-btn" onclick="openCrisisAlerts()">
+        &#x1F6A8;<div class="notif-dot"></div>
+      </div>
+      <div class="hdr-btn" onclick="openLang()">&#x1F310;</div>
+      <div id="hdr-av" onclick="goTab('profile',document.querySelectorAll('.nb')[4])">G</div>
+    </div>
+  </div>
+
+  <div id="main">
+    <div class="scr on" id="scr-home"><div class="scroll" id="home-scroll"></div></div>
+    <div class="scr" id="scr-resources">
+      <div class="sbar"><div><div class="sbar-t">&#x1F4DA; Resources</div><div class="sbar-s">Humanitarian resource directory</div></div></div>
+      <div class="srch-wrap"><input class="srch-inp" placeholder="&#x1F50D; Search all resources..." oninput="searchRes(this.value)"></div>
+      <div class="scroll" id="res-scroll"></div>
+    </div>
+    <div class="scr" id="scr-emergency">
+      <div class="sbar"><div><div class="sbar-t" style="color:#ef4444">&#x1F6A8; Emergency</div><div class="sbar-s">Crisis resources &amp; emergency guides</div></div></div>
+      <div class="scroll" id="emer-scroll"></div>
+    </div>
+    <div class="scr" id="scr-volunteer">
+      <div class="sbar"><div><div class="sbar-t">&#x1F91D; Volunteer</div><div class="sbar-s">Community engagement &amp; opportunities</div></div></div>
+      <div class="scroll" id="vol-scroll"></div>
+    </div>
+    <div class="scr" id="scr-profile">
+      <div class="sbar"><div><div class="sbar-t">&#x1F464; Profile</div><div class="sbar-s">Settings &amp; personal tools</div></div></div>
+      <div class="scroll" id="prof-scroll"></div>
+    </div>
+  </div>
+
+  <div id="nav">
+    <button class="nb on" onclick="goTab('home',this)"><div class="nb-pip"></div><div class="nb-i">&#x1F3E0;</div>Home</button>
+    <button class="nb" onclick="goTab('resources',this)"><div class="nb-pip"></div><div class="nb-i">&#x1F4DA;</div>Resources</button>
+    <button class="nb" onclick="goTab('emergency',this)"><div class="nb-pip"></div><div class="nb-i">&#x1F6A8;</div>Emergency</button>
+    <button class="nb" onclick="goTab('volunteer',this)"><div class="nb-pip"></div><div class="nb-i">&#x1F91D;</div>Volunteer</button>
+    <button class="nb" onclick="goTab('profile',this)"><div class="nb-pip"></div><div class="nb-i">&#x1F464;</div>Profile</button>
+  </div>
+
+  <div id="ov" onclick="if(event.target===this)closeP()">
+    <div class="panel">
+      <div class="phandle"></div>
+      <div class="phead"><div class="ptitle" id="ptitle">Panel</div><button class="pclose" onclick="closeP()">&#x2715;</button></div>
+      <div class="pbody" id="pbody"></div>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+   STATE
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+var piUser=null, _lang='English', _mood=[], _docs={}, _notices=[], _saved=[], _notes=[], _downloads=[], _emergContacts=[];
+var _alertsList=[
+  {lv:'red',ico:'\ud83d\udea8',title:'Active Conflict Alert',body:'Heightened displacement risk in multiple regions. Emergency shelters activated. Follow official guidance.',tag:'URGENT'},
+  {lv:'orange',ico:'\u26a0\ufe0f',title:'Seasonal Flood Warning',body:'Flooding affecting riverside and coastal communities. Prepare evacuation plans now.',tag:'WARNING'},
+  {lv:'blue',ico:'\u2139\ufe0f',title:'Vaccination Campaign Active',body:'Free vaccinations underway in multiple regions. Visit your nearest health center.',tag:'HEALTH'},
+];
+var _piLang='English';
+
+/* LOAD */
+try{var u=localStorage.getItem('unhcr_user');if(u)piUser=JSON.parse(u);}catch(e){}
+try{var m=localStorage.getItem('unhcr_mood');if(m)_mood=JSON.parse(m);}catch(e){}
+try{var d=localStorage.getItem('unhcr_docs');if(d)_docs=JSON.parse(d);}catch(e){}
+try{var n=localStorage.getItem('unhcr_notices');if(n)_notices=JSON.parse(n);}catch(e){}
+try{var s=localStorage.getItem('unhcr_saved');if(s)_saved=JSON.parse(s);}catch(e){}
+try{var nt=localStorage.getItem('unhcr_notes');if(nt)_notes=JSON.parse(nt);}catch(e){}
+try{var lg=localStorage.getItem('unhcr_lang');if(lg)_lang=lg;}catch(e){}
+try{var ec=localStorage.getItem('unhcr_emerg_contacts');if(ec)_emergContacts=JSON.parse(ec);}catch(e){}
+
+/* auth guard moved to load event below */
+
+/* SAVE */
+function saveMood(){try{localStorage.setItem('unhcr_mood',JSON.stringify(_mood));}catch(e){}}
+function saveDocs(){try{localStorage.setItem('unhcr_docs',JSON.stringify(_docs));}catch(e){}}
+function saveNotices(){try{localStorage.setItem('unhcr_notices',JSON.stringify(_notices));}catch(e){}}
+function saveSaved(){try{localStorage.setItem('unhcr_saved',JSON.stringify(_saved));}catch(e){}}
+function saveNotes(){try{localStorage.setItem('unhcr_notes',JSON.stringify(_notes));}catch(e){}}
+function saveEmergContacts(){try{localStorage.setItem('unhcr_emerg_contacts',JSON.stringify(_emergContacts));}catch(e){}}
+
+/* MAINNET BOOT — Pi.init() sandbox:false */
+(function() {
+  if (typeof Pi !== 'undefined') {
+    try { Pi.init({ version: '2.0', sandbox: false }); } catch(e) {}
+  }
+})();
+
+window.addEventListener('load', function() {
+  if (!piUser) {
+    document.body.style.cssText = 'display:flex;align-items:center;justify-content:center;height:100vh;background:#091A3A;font-family:system-ui,sans-serif';
+    document.body.innerHTML = '<div style="text-align:center;padding:2rem">'
+      + '<img src="assets/icons/logo.svg" style="width:72px;height:72px;display:block;margin:0 auto 1.2rem;filter:drop-shadow(0 0 16px rgba(14,165,233,.4))">'
+      + '<div style="font-size:1.4rem;font-weight:900;color:#F0F6FF;letter-spacing:.04em;margin-bottom:.5rem">UNHCR</div>'
+      + '<div style="font-size:.65rem;color:rgba(240,246,255,.4);margin-bottom:1.8rem">Please sign in to continue</div>'
+      + '<button onclick="window.location.href=\'index.html\'" style="padding:.9rem 2.2rem;background:linear-gradient(135deg,#1a56db,#0ea5e9);border:none;border-radius:12px;color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;min-height:48px">Sign In with Pi</button>'
+      + '</div>';
+    return;
+  }
+
+  /* Update avatar */
+  var av = document.getElementById('hdr-av');
+  if (av && piUser.username) av.textContent = piUser.username[0].toUpperCase();
+
+  /* Silent re-auth to refresh session — plain function() callbacks */
+  if (typeof Pi !== 'undefined' && !piUser.isGuest) {
+    Pi.authenticate(
+      ['username'],
+      function onIncompletePaymentFound(payment) {
+        fetch('/complete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ paymentId: payment.identifier })
+        }).catch(function() {});
+      }
+    ).then(function(a) {
+      if (a && a.user) {
+        piUser = a.user;
+        try { localStorage.setItem('unhcr_user', JSON.stringify(piUser)); } catch(e) {}
+        var av2 = document.getElementById('hdr-av');
+        if (av2 && piUser.username) av2.textContent = piUser.username[0].toUpperCase();
+      }
+    }).catch(function() {
+      /* Silent fail — user already loaded from localStorage */
+    });
+  }
+
+  goTab('home', document.querySelector('.nb'));
+});
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+   NAVIGATION
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+function goTab(name,el){
+  document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});
+  document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('on');});
+  var scr=document.getElementById('scr-'+name);if(scr)scr.classList.add('on');
+  if(el)el.classList.add('on');
+  if(name==='home')renderHome();
+  else if(name==='resources')renderResources();
+  else if(name==='emergency')renderEmergency();
+  else if(name==='volunteer')renderVolunteer();
+  else if(name==='profile')renderProfile();
+}
+function openP(title,html){document.getElementById('ptitle').textContent=title;document.getElementById('pbody').innerHTML=html;document.getElementById('ov').className='open';}
+function closeP(){document.getElementById('ov').className='';}
+function toast(msg,type,dur){
+  var el=document.getElementById('toast');
+  el.textContent=msg;el.className='show'+(type?' '+type:'');
+  clearTimeout(toast._t);toast._t=setTimeout(function(){el.className='';},dur||2600);
+}
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+   HELPER BUILDERS
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+function gc(ico,title,sub,bg,bc,fn){
+  return '<div class="gc" style="background:'+bg+';border-color:'+bc+'" onclick="'+fn+'">'
+    +'<div class="gc-ico">'+ico+'</div>'
+    +'<div><div class="gc-t">'+title+'</div><div class="gc-s">'+sub+'</div></div>'
+    +'<div class="gc-shine"></div></div>';
+}
+function res(ico,ibg,title,sub,fn){
+  return '<div class="res" onclick="'+fn+'">'
+    +'<div class="res-ico" style="background:'+ibg+'">'+ico+'</div>'
+    +'<div class="res-body"><div class="res-t">'+title+'</div><div class="res-s">'+sub+'</div></div>'
+    +'<div class="res-a">&#x203A;</div></div>';
+}
+function prow(ico,ibg,title,sub,fn){
+  return '<button class="pr-row" onclick="'+fn+'">'
+    +'<div class="pr-ico" style="background:'+ibg+'">'+ico+'</div>'
+    +'<div style="flex:1;min-width:0"><div class="pr-t">'+title+'</div><div class="pr-s">'+sub+'</div></div>'
+    +'<div class="pr-a">&#x203A;</div></button>';
+}
+function updateCard(ico,ibg,title,sub,tagHtml){
+  return '<div class="update-card"><div class="update-ico" style="background:'+ibg+';width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0">'+ico+'</div>'
+    +'<div class="update-body"><div class="update-t">'+title+'</div><div class="update-s">'+sub+'</div>'+tagHtml+'</div></div>';
+}
+function secLabel(text,action,actionFn){
+  return '<div class="sec">'+text+(action?'<span class="sact" onclick="'+actionFn+'">'+action+'</span>':'')+'</div>';
+}
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+   HOME
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+function renderHome(){
+  var name=piUser&&piUser.username?piUser.username:'Friend';
+  var h=new Date().getHours();
+  var greet=h<12?'Good Morning':h<17?'Good Afternoon':'Good Evening';
+  var today=new Date().toDateString();
+  var tm=_mood.find(function(m){return m.date===today;});
+  var mE=tm?['\ud83d\ude04','\ud83d\ude42','\ud83d\ude10','\ud83d\ude1f','\ud83d\ude22'][tm.score]:'\ud83d\udc99';
+  var dc=Object.values(_docs).filter(Boolean).length;
+  var dp=Math.round(dc/12*100);
+
+  document.getElementById('home-scroll').innerHTML=
+    /* Greeting */
+    '<div style="padding:.7rem 1rem .25rem;display:flex;align-items:center;justify-content:space-between">'
+      +'<div><div style="font-size:.47rem;color:rgba(240,246,255,.38)">'+greet+', <b style="color:#F0F6FF">@'+name+'</b></div>'
+        +'<div style="font-size:.88rem;font-weight:900;letter-spacing:-.03em">UNHCR<b style="color:#0ea5e9">.pi</b></div></div>'
+      +'<div onclick="openCrisisAlerts()" style="width:34px;height:34px;border-radius:9px;background:rgba(239,68,68,.14);border:1.5px solid rgba(239,68,68,.32);display:flex;align-items:center;justify-content:center;font-size:.9rem;cursor:pointer;position:relative">&#x1F6A8;<div style="position:absolute;top:-3px;right:-3px;width:9px;height:9px;background:#ef4444;border-radius:50%;border:2px solid #0A1628"></div></div>'
+    +'</div>'
+
+    /* Stats strip */
+    +'<div class="stats-strip">'
+      +'<div class="stat-tile" onclick="openWellbeing()"><div class="stat-v" style="font-size:1.4rem">'+mE+'</div><div class="stat-l">Today\'s<br>Mood</div></div>'
+      +'<div class="stat-tile" onclick="openDocChecklist()"><div class="stat-v">'+dp+'%</div><div class="stat-l">Docs<br>Secured</div></div>'
+      +'<div class="stat-tile" onclick="openCrisisAlerts()"><div class="stat-v" style="color:#ef4444">'+_alertsList.length+'</div><div class="stat-l">Active<br>Alerts</div></div>'
+    +'</div>'
+
+    /* Hero */
+    +'<div style="margin:.4rem 1rem;background:linear-gradient(135deg,rgba(26,86,219,.18),rgba(14,165,233,.08));border:1px solid rgba(14,165,233,.22);border-radius:18px;padding:1.1rem 1rem;position:relative;overflow:hidden">'
+      +'<div style="font-size:.92rem;font-weight:800;line-height:1.35;margin-bottom:.32rem">Humanitarian Resources &amp; Community Support</div>'
+      +'<div style="font-size:.5rem;color:rgba(240,246,255,.5);line-height:1.75;margin-bottom:.55rem">Emergency resources, shelter, healthcare, legal aid, education, and volunteer opportunities \u2014 all in one place.</div>'
+      +'<div style="display:flex;gap:.32rem;flex-wrap:wrap">'
+        +'<span class="pill pr">&#x1F6A8; Emergency</span>'
+        +'<span class="pill pg">&#x1FA7A; Health</span>'
+        +'<span class="pill po">&#x1F4DA; Education</span>'
+        +'<span class="pill pb">&#x1F91D; Volunteer</span>'
+      +'</div>'
+      +'<div style="position:absolute;bottom:-20px;right:-8px;font-size:7rem;opacity:.028;pointer-events:none">&#x1F30D;</div>'
+    +'</div>'
+
+    /* Quick Access */
+    +secLabel('Quick Access')
+    +'<div class="grid2">'
+      +gc('&#x1F6A8;','Emergency','Crisis resources','rgba(239,68,68,.12)','rgba(239,68,68,.3)',"goTab('emergency',document.querySelectorAll('.nb')[2])")
+      +gc('&#x1FA7A;','Healthcare','Clinics &amp; hospitals','rgba(16,185,129,.1)','rgba(16,185,129,.28)',"openHealthcare()")
+      +gc('&#x1F3E0;','Shelter','Shelter directory','rgba(245,158,11,.1)','rgba(245,158,11,.28)',"openShelter()")
+      +gc('&#x1F4DA;','Education','Learning resources','rgba(124,58,237,.1)','rgba(124,58,237,.28)',"openEducation()")
+      +gc('&#x1F91D;','Volunteer','Get involved','rgba(14,165,233,.1)','rgba(14,165,233,.28)',"goTab('volunteer',document.querySelectorAll('.nb')[3])")
+      +gc('&#x1F916;','AI Assistant','Get humanitarian help','rgba(26,86,219,.12)','rgba(26,86,219,.3)',"openAI()")
+    +'</div>'
+
+    /* Advanced Tools */
+    +secLabel('Advanced Tools')
+    +'<div class="grid2">'
+      +gc('&#x1F4AC;','Phrase Cards','Emergency multilingual','rgba(14,165,233,.1)','rgba(14,165,233,.28)',"openPhraseCards()")
+      +gc('&#x2705;','Doc Checklist',dp+'% secured','rgba(16,185,129,.1)','rgba(16,185,129,.28)',"openDocChecklist()")
+      +gc('&#x1F9EA;','Symptom Check','Health triage tool','rgba(239,68,68,.1)','rgba(239,68,68,.28)',"openSymptomChecker()")
+      +gc('&#x1F4CD;','Find Services','Nearby orgs &amp; offices','rgba(245,158,11,.1)','rgba(245,158,11,.28)',"openServicesFinder()")
+      +gc('&#x1F4CB;','Notice Board','Community notices','rgba(124,58,237,.1)','rgba(124,58,237,.28)',"openNoticeBoard()")
+      +gc('&#x1F60A;','Wellbeing',mE+' Today','rgba(236,72,153,.1)','rgba(236,72,153,.28)',"openWellbeing()")
+    +'</div>'
+
+    /* More Tools */
+    +secLabel('More Tools')
+    +'<div class="grid2">'
+      +gc('&#x1F4C5;','Community Events','Events &amp; meetups','rgba(245,158,11,.1)','rgba(245,158,11,.28)',"openCommunityEvents()")
+      +gc('&#x1F4A1;','Preparedness','Disaster readiness','rgba(239,68,68,.1)','rgba(239,68,68,.28)',"openDisasterCenter()")
+      +gc('&#x1F5FA;','Resource Map','Find services map','rgba(14,165,233,.1)','rgba(14,165,233,.28)',"openResourceMap()")
+      +gc('&#x1F4DD;','My Notes','Personal notes','rgba(124,58,237,.1)','rgba(124,58,237,.28)',"openNotes()")
+      +gc('&#x1F4DE;','Emergency Contacts','My personal SOS list','rgba(239,68,68,.12)','rgba(239,68,68,.3)',"openPersonalEmergContacts()")
+      +gc('&#x1F4E5;','Downloads','Offline guides','rgba(16,185,129,.1)','rgba(16,185,129,.28)',"openDownloads()")
+    +'</div>'
+
+    /* Crisis alerts preview */
+    +secLabel('Crisis Alerts','View all','openCrisisAlerts()')
+    +'<div style="padding:0 1rem">'
+      +_alertsList.slice(0,2).map(function(a){
+        var bg=a.lv==='red'?'rgba(239,68,68,.12)':a.lv==='orange'?'rgba(245,158,11,.1)':'rgba(14,165,233,.1)';
+        var bc=a.lv==='red'?'rgba(239,68,68,.28)':a.lv==='orange'?'rgba(245,158,11,.24)':'rgba(14,165,233,.24)';
+        var tc=a.lv==='red'?'#fca5a5':a.lv==='orange'?'#fde68a':'#93c5fd';
+        return '<div class="alert-card" style="background:'+bg+';border:1.5px solid '+bc+'" onclick="openCrisisAlerts()">'
+          +'<div style="display:flex;gap:.5rem;align-items:flex-start"><div style="font-size:1.2rem;flex-shrink:0">'+a.ico+'</div>'
+          +'<div><div class="alert-title" style="color:'+tc+'">'+a.title+'</div>'
+          +'<div class="alert-body">'+a.body.substring(0,75)+(a.body.length>75?'\u2026':'')+'</div>'
+          +'<span class="alert-tag" style="background:'+bg+';color:'+tc+';border:1px solid '+bc+'">'+a.tag+'</span>'
+          +'</div></div></div>';
+      }).join('')
+    +'</div>'
+
+    /* Latest Updates */
+    +secLabel('Latest Updates')
+    +'<div style="padding:0 1rem">'
+      +updateCard('&#x1F6A8;','rgba(239,68,68,.2)','Emergency Guides Updated','Offline emergency card and CPR guide now updated for 2026.','<span class="pill pr">Emergency</span>')
+      +updateCard('&#x1FA7A;','rgba(16,185,129,.18)','Healthcare Directory Expanded','New clinic listings added for Nigeria, Kenya, Ethiopia and Uganda.','<span class="pill pg">Health</span>')
+      +updateCard('&#x1F4AC;','rgba(14,165,233,.18)','Phrase Cards: Hausa Added','Emergency phrases now available in English, Arabic, French, Spanish and Hausa.','<span class="pill pb">New Feature</span>')
+      +updateCard('&#x1F9EA;','rgba(239,68,68,.15)','Symptom Checker Live','Interactive health triage tool now available in the Advanced Tools section.','<span class="pill pb">New Feature</span>')
+    +'</div>'
+
+    /* About */
+    +secLabel('About This Platform')
+    +'<div style="padding:0 1rem">'
+      +'<div class="card card-blue">'
+        +'<div style="font-size:.6rem;font-weight:800;margin-bottom:.38rem">&#x2705; What UNHCR.pi Does</div>'
+        +'<div style="font-size:.5rem;color:rgba(240,246,255,.58);line-height:1.85;display:grid;grid-template-columns:1fr 1fr;gap:.08rem">'
+          +'<span>&#x1F6A8; Emergency resources</span><span>&#x1FA7A; Healthcare directory</span>'
+          +'<span>&#x1F3E0; Shelter finder</span><span>&#x1F4DA; Education resources</span>'
+          +'<span>&#x1F4AC; Phrase cards</span><span>&#x1F9EA; Symptom checker</span>'
+          +'<span>&#x1F4CD; Services finder</span><span>&#x1F60A; Wellbeing tracker</span>'
+          +'<span>&#x2705; Document checklist</span><span>&#x1F4CB; Notice board</span>'
+          +'<span>&#x1F512; Digital safety</span><span>&#x1F916; AI assistant</span>'
+        +'</div>'
+      +'</div>'
+      +'<div class="card card-red" style="margin-bottom:.5rem">'
+        +'<div style="font-size:.6rem;font-weight:800;color:#fca5a5;margin-bottom:.3rem">&#x274C; What UNHCR.pi Does NOT Do</div>'
+        +'<div style="font-size:.5rem;color:rgba(240,246,255,.55);line-height:1.82">'
+          +'&#x274C; Process aid payments &#x2022; &#x274C; Refugee registration<br>'
+          +'&#x274C; Represent UNHCR or UN &#x2022; &#x274C; Request passphrases'
+        +'</div>'
+      +'</div>'
+    +'</div>'
+    +'<div style="height:90px"></div>';
+}
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+   RESOURCES TAB
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+function renderResources(){
+  document.getElementById('res-scroll').innerHTML=
+    secLabel('Emergency &amp; Crisis')
+    +'<div style="padding:0 1rem">'
+      +res('&#x1F6A8;','rgba(239,68,68,.2)','Emergency Contacts','Global numbers &amp; humanitarian orgs','openEmergencyContacts()')
+      +res('&#x26A1;','rgba(239,68,68,.16)','Crisis Helplines','24/7 mental health &amp; crisis lines','openCrisisLines()')
+      +res('&#x1F3E5;','rgba(239,68,68,.14)','Medical Emergency','Find urgent medical care','openMedicalEmergency()')
+      +res('&#x1F9BA;','rgba(239,68,68,.12)','First Aid &amp; CPR','Essential first aid procedures','openFirstAid()')
+    +'</div>'
+    +secLabel('Shelter &amp; Housing')
+    +'<div style="padding:0 1rem">'
+      +res('&#x1F3E0;','rgba(245,158,11,.2)','Shelter Directory','Emergency &amp; temporary shelter','openShelter()')
+      +res('&#x1F4CD;','rgba(245,158,11,.16)','Displacement Support','Resources for displaced persons','openDisplacement()')
+      +res('&#x1F511;','rgba(245,158,11,.14)','Housing Assistance','Housing aid organisations','openHousing()')
+    +'</div>'
+    +secLabel('Healthcare')
+    +'<div style="padding:0 1rem">'
+      +res('&#x1FA7A;','rgba(16,185,129,.2)','Healthcare Directory','Clinics, hospitals &amp; health centers','openHealthcare()')
+      +res('&#x1F3E5;','rgba(16,185,129,.16)','Hospital Finder','Find nearest hospitals','openHospitalFinder()')
+      +res('&#x1F3A4;','rgba(16,185,129,.14)','Clinic Finder','Find local clinics','openClinicFinder()')
+      +res('&#x1F9E0;','rgba(16,185,129,.12)','Mental Health','Counselling &amp; mental health support','openMentalHealth()')
+      +res('&#x1F48A;','rgba(16,185,129,.1)','Disease Prevention','Health education &amp; prevention','openDiseasePrev()')
+      +res('&#x1F955;','rgba(16,185,129,.09)','Nutrition Education','Nutrition &amp; food safety','openNutrition()')
+    +'</div>'
+    +secLabel('Legal &amp; Rights')
+    +'<div style="padding:0 1rem">'
+      +res('&#x2696;&#xFE0F;','rgba(14,165,233,.2)','Legal Aid Directory','Free legal assistance resources','openLegalAid()')
+      +res('&#x1F4DC;','rgba(14,165,233,.16)','Know Your Rights','Human rights information (UDHR)','openRights()')
+      +res('&#x1F30D;','rgba(14,165,233,.14)','International Protection','Asylum &amp; refugee protection','openProtection()')
+      +res('&#x1F4C2;','rgba(14,165,233,.12)','Public Services','Access to public services guide','openPublicServices()')
+    +'</div>'
+    +secLabel('Education')
+    +'<div style="padding:0 1rem">'
+      +res('&#x1F4DA;','rgba(124,58,237,.2)','Learning Resources','Free educational platforms','openEducation()')
+      +res('&#x1F4BB;','rgba(124,58,237,.16)','Digital Literacy','Digital skills &amp; internet safety','openDigitalLiteracy()')
+      +res('&#x1F393;','rgba(124,58,237,.14)','Scholarships','Humanitarian scholarship programs','openScholarships()')
+      +res('&#x1F5E3;','rgba(124,58,237,.12)','Language Learning','Learn new languages free','openLanguageLearning()')
+      +res('&#x1F4AA;','rgba(124,58,237,.1)','Skills Development','Build employable skills','openSkillsDev()')
+    +'</div>'
+    +secLabel('Community Resources')
+    +'<div style="padding:0 1rem">'
+      +res('&#x1F3D8;','rgba(245,158,11,.18)','Community Resources','Local support &amp; community services','openCommunityRes()')
+      +res('&#x1F91D;','rgba(14,165,233,.16)','Volunteer Hub','Volunteer opportunities directory','goTab(\'volunteer\',document.querySelectorAll(\'.nb\')[3])')
+    +'</div>'
+    +secLabel('Tools &amp; Guides')
+    +'<div style="padding:0 1rem">'
+      +res('&#x1F4AC;','rgba(14,165,233,.18)','Phrase Cards','Emergency multilingual phrases','openPhraseCards()')
+      +res('&#x1F9EA;','rgba(239,68,68,.15)','Symptom Checker','Interactive health triage','openSymptomChecker()')
+      +res('&#x1F4CD;','rgba(245,158,11,.15)','Services Finder','Find nearby humanitarian offices','openServicesFinder()')
+      +res('&#x1F512;','rgba(14,165,233,.14)','Digital Safety','Online security guide','openDigitalSafety()')
+      +res('&#x1F4DC;','rgba(124,58,237,.14)','Humanitarian Timeline','History of refugee protection','openHumanitarianTimeline()')
+      +res('&#x1F4B0;','rgba(16,185,129,.14)','Financial Literacy','Pi Network &amp; money basics','openFinancialLiteracy()')
+      +res('&#x1F3AF;','rgba(245,158,11,.14)','Scam Awareness','Protect yourself from fraud','openScamAwareness()')
+    +'</div>'
+    +'<div style="height:90px"></div>';
+}
+
+function searchRes(q){
+  if(!q){renderResources();return;}
+  q=q.toLowerCase();
+  var all=[
+    {t:'Emergency Contacts',fn:'openEmergencyContacts()'},
+    {t:'Crisis Helplines',fn:'openCrisisLines()'},
+    {t:'First Aid & CPR',fn:'openFirstAid()'},
+    {t:'Medical Emergency',fn:'openMedicalEmergency()'},
+    {t:'Shelter Directory',fn:'openShelter()'},
+    {t:'Displacement Support',fn:'openDisplacement()'},
+    {t:'Housing Assistance',fn:'openHousing()'},
+    {t:'Healthcare Directory',fn:'openHealthcare()'},
+    {t:'Hospital Finder',fn:'openHospitalFinder()'},
+    {t:'Clinic Finder',fn:'openClinicFinder()'},
+    {t:'Mental Health Support',fn:'openMentalHealth()'},
+    {t:'Disease Prevention',fn:'openDiseasePrev()'},
+    {t:'Nutrition Education',fn:'openNutrition()'},
+    {t:'Legal Aid',fn:'openLegalAid()'},
+    {t:'Know Your Rights',fn:'openRights()'},
+    {t:'International Protection',fn:'openProtection()'},
+    {t:'Public Services',fn:'openPublicServices()'},
+    {t:'Education Resources',fn:'openEducation()'},
+    {t:'Digital Literacy',fn:'openDigitalLiteracy()'},
+    {t:'Scholarships',fn:'openScholarships()'},
+    {t:'Language Learning',fn:'openLanguageLearning()'},
+    {t:'Skills Development',fn:'openSkillsDev()'},
+    {t:'Phrase Cards',fn:'openPhraseCards()'},
+    {t:'Symptom Checker',fn:'openSymptomChecker()'},
+    {t:'Services Finder',fn:'openServicesFinder()'},
+    {t:'Digital Safety',fn:'openDigitalSafety()'},
+    {t:'Humanitarian Timeline',fn:'openHumanitarianTimeline()'},
+    {t:'Financial Literacy',fn:'openFinancialLiteracy()'},
+    {t:'Scam Awareness',fn:'openScamAwareness()'},
+    {t:'Community Resources',fn:'openCommunityRes()'},
+    {t:'Emergency Preparedness',fn:'openPreparedness()'},
+    {t:'Evacuation Planning',fn:'openEvacuation()'},
+    {t:'Natural Disaster Guide',fn:'openDisasterGuide()'},
+    {t:'Fire Safety',fn:"openDisasterTopic('fire')"},
+    {t:'Flood Safety',fn:"openDisasterTopic('flood')"},
+    {t:'Earthquake Safety',fn:"openDisasterTopic('earthquake')"},
+    {t:'Heatwave Safety',fn:"openDisasterTopic('heatwave')"},
+    {t:'Survival Guide',fn:'openSurvivalGuide()'},
+    {t:'Notice Board',fn:'openNoticeBoard()'},
+    {t:'Volunteer Opportunities',fn:"goTab('volunteer',document.querySelectorAll('.nb')[3])"},
+    {t:'AI Assistant',fn:'openAI()'},
+    {t:'Wellbeing Check-in',fn:'openWellbeing()'},
+    {t:'Document Checklist',fn:'openDocChecklist()'},
+    {t:'Resource Map',fn:'openResourceMap()'},
+  ];
+  var matches=all.filter(function(a){return a.t.toLowerCase().includes(q);});
+  var el=document.getElementById('res-scroll');
+  if(!el)return;
+  el.innerHTML='<div style="padding:.4rem 1rem .2rem;font-size:.55rem;color:rgba(240,246,255,.35)">Results for "'+q+'"</div>'
+    +(matches.length?matches.map(function(m){
+      return '<div style="padding:0 1rem .3rem"><div class="res" onclick="closeP&&closeP();'+m.fn+'">'
+        +'<div class="res-ico" style="background:rgba(14,165,233,.15)">&#x1F50D;</div>'
+        +'<div class="res-body"><div class="res-t">'+m.t+'</div></div>'
+        +'<div class="res-a">&#x203A;</div></div></div>';
+    }).join('')
+    :'<div class="empty"><span class="empty-i">&#x1F50D;</span><div class="empty-t">No results</div><div class="empty-s">Try different keywords</div></div>')
+    +'<div style="height:90px"></div>';
+}
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+   EMERGENCY TAB
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+function renderEmergency(){
+  document.getElementById('emer-scroll').innerHTML=
+    '<div class="sos-banner">'
+      +'<div style="font-size:2rem">&#x1F6A8;</div>'
+      +'<div class="sos-title">In Immediate Danger?</div>'
+      +'<div class="sos-sub">Call your local emergency number immediately.<br>This app provides information only \u2014 not emergency dispatch.</div>'
+      +'<button class="sos-btn" onclick="openEmergencyContacts()">&#x1F4DE; Emergency Contacts</button>'
+    +'</div>'
+    +secLabel('SOS &amp; Emergency Centers')
+    +'<div style="padding:0 1rem">'
+      +res('&#x1F198;','rgba(239,68,68,.22)','SOS Center','Immediate emergency resources','openSOSCenter()')
+      +res('&#x1F4DE;','rgba(239,68,68,.18)','Emergency Contacts','Global &amp; local emergency numbers','openEmergencyContacts()')
+      +res('&#x26A1;','rgba(239,68,68,.16)','Crisis Helplines','24/7 crisis support lines','openCrisisLines()')
+      +res('&#x1F4F1;','rgba(239,68,68,.14)','Emergency QR Card','Shareable emergency info card','openEmergencyQR()')
+    +'</div>'
+    +secLabel('Emergency Guides')
+    +'<div style="padding:0 1rem">'
+      +res('&#x1F9BA;','rgba(239,68,68,.2)','First Aid &amp; CPR','Life-saving procedures guide','openFirstAid()')
+      +res('&#x1F4D6;','rgba(239,68,68,.16)','Emergency Preparedness','72-hour kit &amp; readiness guide','openPreparedness()')
+      +res('&#x1F690;','rgba(239,68,68,.14)','Evacuation Planning','Safe evacuation procedures','openEvacuation()')
+      +res('&#x1F4CB;','rgba(239,68,68,.12)','Emergency Checklist','Quick emergency action list','openEmergencyChecklist()')
+      +res('&#x1F9F0;','rgba(239,68,68,.1)','Survival Guide','Essential survival skills','openSurvivalGuide()')
+      +res('&#x1F525;','rgba(239,68,68,.09)','Fire Safety','Fire prevention &amp; response','openDisasterTopic(\'fire\')')
+    +'</div>'
+    +secLabel('Disaster Preparedness Center')
+    +'<div style="padding:0 1rem">'
+      +res('&#x1F4A1;','rgba(245,158,11,.2)','Disaster Preparedness Center','Complete disaster readiness hub','openDisasterCenter()')
+      +res('&#x1F4A7;','rgba(14,165,233,.18)','Flood Safety','Flood preparation &amp; response','openDisasterTopic(\'flood\')')
+      +res('&#x1F30B;','rgba(239,68,68,.16)','Earthquake Safety','Earthquake readiness guide','openDisasterTopic(\'earthquake\')')
+      +res('&#x2600;&#xFE0F;','rgba(245,158,11,.16)','Heatwave Safety','Heat emergency guidance','openDisasterTopic(\'heatwave\')')
+      +res('&#x1F300;','rgba(14,165,233,.14)','Natural Disaster Guide','All disaster scenarios','openDisasterGuide()')
+    +'</div>'
+    +secLabel('Offline Emergency Card')
+    +'<div style="padding:0 1rem .5rem">'
+      +'<div class="card card-red">'
+        +'<div style="font-size:.62rem;font-weight:800;color:#fca5a5;margin-bottom:.4rem">&#x1F4F5; Offline Emergency Information</div>'
+        +'<div style="font-size:.52rem;color:rgba(240,246,255,.62);line-height:1.95">'
+          +'&#x1F4DE; <b>Emergency (Most countries):</b> 112<br>'
+          +'&#x1F4DE; <b>USA / Canada:</b> 911<br>'
+          +'&#x1F4DE; <b>UK:</b> 999<br>'
+          +'&#x1F4DE; <b>Australia:</b> 000<br>'
+          +'&#x1F4DE; <b>Nigeria:</b> 112 / 199<br>'
+          +'&#x1F4DE; <b>India:</b> 112<br>'
+          +'&#x1F691; <b>Medical emergency:</b> Go to nearest hospital<br>'
+          +'&#x1F6E1; <b>If displaced:</b> Contact Red Cross / Red Crescent<br>'
+          +'&#x1F64B; <b>Refugee protection:</b> Contact UNHCR or IOM'
+        +'</div>'
+        +'<button onclick="toast(\'Emergency card saved for offline use\',\'s\')" style="background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.35);border-radius:9px;padding:.48rem .85rem;color:#fca5a5;font-size:.58rem;font-weight:700;cursor:pointer;margin-top:.55rem;min-height:38px">&#x1F4BE; Save Offline</button>'
+      +'</div>'
+    +'</div>'
+    +'<div style="height:90px"></div>';
+}
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+   VOLUNTEER TAB
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+function renderVolunteer(){
+  document.getElementById('vol-scroll').innerHTML=
+    '<div style="margin:.5rem 1rem;background:linear-gradient(135deg,rgba(14,165,233,.15),rgba(26,86,219,.1));border:1px solid rgba(14,165,233,.26);border-radius:16px;padding:1rem">'
+      +'<div style="font-size:1.5rem;margin-bottom:.28rem">&#x1F91D;</div>'
+      +'<div style="font-size:.72rem;font-weight:800;margin-bottom:.22rem">Make a Difference</div>'
+      +'<div style="font-size:.52rem;color:rgba(240,246,255,.52);line-height:1.75">Connect with humanitarian organisations, join community initiatives, and contribute your skills.</div>'
+    +'</div>'
+    +secLabel('Volunteer Opportunities')
+    +'<div style="padding:0 1rem">'
+      +res('&#x1F4BB;','rgba(14,165,233,.2)','Digital Skills Teaching','Teach digital literacy &amp; computer skills','openVolOpp(\'Digital Skills Teaching\')')
+      +res('&#x1F5E3;','rgba(124,58,237,.2)','Translation &amp; Interpretation','Use language skills to help others','openVolOpp(\'Translation\')')
+      +res('&#x1FA7A;','rgba(16,185,129,.2)','Health Education','Community health awareness','openVolOpp(\'Health Education\')')
+      +res('&#x1F4DA;','rgba(245,158,11,.2)','Tutoring &amp; Mentoring','Teach &amp; mentor community members','openVolOpp(\'Tutoring\')')
+      +res('&#x1F3D7;','rgba(239,68,68,.18)','Community Building','Build stronger communities','openVolOpp(\'Community Building\')')
+    +'</div>'
+    +secLabel('Community Programs')
+    +'<div style="padding:0 1rem">'
+      +res('&#x1F4C5;','rgba(245,158,11,.18)','Community Events','Upcoming events &amp; meetups','openCommunityEvents()')
+      +res('&#x1F4E2;','rgba(14,165,233,.16)','Community Announcements','Official &amp; community news','openNoticeBoard()')
+      +res('&#x1F3AF;','rgba(124,58,237,.16)','Community Projects','Active humanitarian projects','openCommunityProjects()')
+      +res('&#x1F4CB;','rgba(16,185,129,.16)','Notice Board','Community notice board','openNoticeBoard()')
+    +'</div>'
+    +secLabel('Get Involved')
+    +'<div style="padding:0 1rem">'
+      +'<div class="card card-blue">'
+        +'<div style="font-size:.62rem;font-weight:800;margin-bottom:.35rem">&#x1F91D; Register as a Volunteer</div>'
+        +'<div style="font-size:.52rem;color:rgba(240,246,255,.52);line-height:1.75;margin-bottom:.45rem">Add your skills and availability to our community volunteer directory.</div>'
+        +'<button class="btn-p" onclick="openVolRegister()">Register Now</button>'
+      +'</div>'
+      +'<div class="card card-green">'
+        +'<div style="font-size:.62rem;font-weight:800;margin-bottom:.35rem">&#x1F465; Join a Community Group</div>'
+        +'<div style="font-size:.52rem;color:rgba(240,246,255,.52);line-height:1.75;margin-bottom:.45rem">Connect with others working on humanitarian causes in the Pi ecosystem.</div>'
+        +'<button class="btn-p" onclick="openCommunityGroups()">Browse Groups</button>'
+      +'</div>'
+    +'</div>'
+    +'<div style="height:90px"></div>';
+}
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+   PROFILE TAB
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+function renderProfile(){
+  var name=piUser&&piUser.username?piUser.username:'Guest';
+  document.getElementById('prof-scroll').innerHTML=
+    '<div style="text-align:center;padding:1.4rem 1rem 1rem;background:linear-gradient(135deg,rgba(26,86,219,.14),rgba(14,165,233,.07));border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:.4rem">'
+      +'<img src="assets/icons/logo.svg" alt="UNHCR" style="width:52px;height:52px;display:block;margin:0 auto .4rem;filter:drop-shadow(0 0 8px rgba(14,165,233,.4))">'
+      +'<div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#1a56db,#0ea5e9);display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:900;margin:0 auto .55rem">'+name[0].toUpperCase()+'</div>'
+      +'<div style="font-size:.95rem;font-weight:800">@'+name+'</div>'
+      +'<div style="font-size:.5rem;color:rgba(240,246,255,.35);margin-top:.14rem">UNHCR Community Member</div>'
+    +'</div>'
+    +'<div style="padding:0 1rem">'
+      +'<div style="font-size:.46rem;color:rgba(240,246,255,.32);text-transform:uppercase;letter-spacing:.12em;margin:.5rem 0 .3rem;font-weight:700">Personal Tools</div>'
+      +prow('&#x1F60A;','rgba(236,72,153,.18)','Daily Wellbeing Check-in','Mental health mood tracker','openWellbeing()')
+      +prow('&#x2705;','rgba(16,185,129,.18)','Document Safety Checklist','Keep vital documents secure','openDocChecklist()')
+      +prow('&#x1F4DD;','rgba(124,58,237,.18)','My Notes','Personal notes &amp; reminders','openNotes()')
+      +prow('&#x1F4DE;','rgba(239,68,68,.18)','Personal Emergency Contacts','My SOS contact list','openPersonalEmergContacts()')
+      +prow('&#x1F4E5;','rgba(16,185,129,.16)','Downloads &amp; Offline Content','Downloaded guides','openDownloads()')
+      +prow('&#x1F4BE;','rgba(14,165,233,.16)','Saved Resources','Bookmarked resources','openSaved()')
+      +'<div style="font-size:.46rem;color:rgba(240,246,255,.32);text-transform:uppercase;letter-spacing:.12em;margin:.6rem 0 .3rem;font-weight:700">Community</div>'
+      +prow('&#x1F4CB;','rgba(124,58,237,.18)','Notice Board','Community notices &amp; posts','openNoticeBoard()')
+      +prow('&#x1F4C5;','rgba(245,158,11,.18)','Community Events','Upcoming events','openCommunityEvents()')
+      +prow('&#x1F916;','rgba(26,86,219,.18)','AI Assistant','Humanitarian AI help','openAI()')
+      +'<div style="font-size:.46rem;color:rgba(240,246,255,.32);text-transform:uppercase;letter-spacing:.12em;margin:.6rem 0 .3rem;font-weight:700">Knowledge</div>'
+      +prow('&#x1F4DC;','rgba(14,165,233,.16)','Humanitarian Timeline','History of refugee protection','openHumanitarianTimeline()')
+      +prow('&#x1F4D6;','rgba(124,58,237,.16)','Humanitarian Library','Books, reports &amp; documents','openHumLibrary()')
+      +prow('&#x2753;','rgba(14,165,233,.14)','FAQs','Frequently asked questions','openFAQs()')
+      +prow('&#x1F512;','rgba(239,68,68,.16)','Digital Safety Guide','Online security &amp; Pi safety','openDigitalSafety()')
+      +prow('&#x1F4B0;','rgba(16,185,129,.14)','Financial Literacy','Pi &amp; money basics','openFinancialLiteracy()')
+      +prow('&#x1F3AF;','rgba(245,158,11,.14)','Scam Awareness','Protect yourself','openScamAwareness()')
+      +'<div style="font-size:.46rem;color:rgba(240,246,255,.32);text-transform:uppercase;letter-spacing:.12em;margin:.6rem 0 .3rem;font-weight:700">Settings &amp; Accessibility</div>'
+      +prow('&#x1F310;','rgba(14,165,233,.16)','Language Settings','Change display language','openLang()')
+      +prow('&#x1F50D;','rgba(14,165,233,.14)','Global Search','Search all resources','openSearch()')
+      +'<div style="font-size:.46rem;color:rgba(240,246,255,.32);text-transform:uppercase;letter-spacing:.12em;margin:.6rem 0 .3rem;font-weight:700">Legal &amp; Info</div>'
+      +prow('&#x1F4CB;','rgba(255,255,255,.08)','Privacy Policy','How we handle your data','window.location.href=\'/privacy-policy.html\'')
+      +prow('&#x1F4C4;','rgba(255,255,255,.08)','Terms of Service','Platform usage terms','window.location.href=\'/terms-of-service.html\'')
+      +prow('&#x26A0;&#xFE0F;','rgba(245,158,11,.14)','Disclaimer','Independent platform notice','openDisclaimer()')
+      +prow('&#x2139;&#xFE0F;','rgba(14,165,233,.14)','About UNHCR.pi','Version &amp; info','openAbout()')
+    +'</div>'
+    +'<div style="padding:.6rem 1rem">'
+      +'<button class="btn-red" style="width:100%;min-height:48px" onclick="doLogout()">Sign Out</button>'
+    +'</div>'
+    +'<div style="font-size:.42rem;color:rgba(240,246,255,.13);text-align:center;padding:0 1rem 1rem;line-height:2">'
+      +'&copy; 2026 UNHCR Community Platform'
+    +'</div>'
+    +'<div style="height:90px"></div>';
+}
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+   ALL PANEL FUNCTIONS \u2014 86 UTILITIES
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+
+/* \u2500\u2500 1. CRISIS ALERTS \u2500\u2500 */
+function openCrisisAlerts(){
+  var html='<div style="font-size:.5rem;color:rgba(240,246,255,.38);margin-bottom:.6rem;line-height:1.75">Live humanitarian alerts. In any emergency call 112 or your local emergency number immediately.</div>';
+  _alertsList.forEach(function(a){
+    var bg=a.lv==='red'?'rgba(239,68,68,.12)':a.lv==='orange'?'rgba(245,158,11,.1)':'rgba(14,165,233,.1)';
+    var bc=a.lv==='red'?'rgba(239,68,68,.3)':a.lv==='orange'?'rgba(245,158,11,.26)':'rgba(14,165,233,.26)';
+    var tc=a.lv==='red'?'#fca5a5':a.lv==='orange'?'#fde68a':'#93c5fd';
+    html+='<div class="alert-card" style="background:'+bg+';border:1.5px solid '+bc+'">'
+      +'<div style="display:flex;gap:.5rem;align-items:flex-start"><div style="font-size:1.25rem;flex-shrink:0">'+a.ico+'</div>'
+      +'<div><div class="alert-title" style="color:'+tc+'">'+a.title+'</div>'
+      +'<div class="alert-body">'+a.body+'</div>'
+      +'<span class="alert-tag" style="background:'+bg+';color:'+tc+';border:1px solid '+bc+'">'+a.tag+'</span>'
+      +'</div></div></div>';
+  });
+  html+='<div style="font-size:.42rem;color:rgba(240,246,255,.25);margin-top:.5rem;line-height:1.75">&#x26A0; Alerts for awareness only. Always follow official government and emergency service instructions.</div>';
+  openP('&#x1F6A8; Crisis Alerts',html);
+}
+
+/* \u2500\u2500 2. SOS CENTER \u2500\u2500 */
+function openSOSCenter(){
+  openP('&#x1F198; SOS Center',
+    '<div class="card card-red"><div style="font-size:.62rem;font-weight:800;color:#fca5a5;margin-bottom:.35rem">&#x1F6A8; Emergency Response</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.62);line-height:1.9">'
+      +'If you are in immediate danger:<br><br>'
+      +'<b style="color:#fca5a5">1. Call emergency services: 112</b><br>'
+      +'2. Move to a safe location<br>'
+      +'3. Contact someone you trust<br>'
+      +'4. If displaced: Contact Red Cross or UNHCR<br>'
+      +'5. Use this app for resource information only'
+    +'</div></div>'
+    +'<button class="btn-p" onclick="openEmergencyContacts()">&#x1F4DE; Emergency Numbers</button>'
+    +'<button class="btn-o" onclick="openCrisisLines()">&#x26A1; Crisis Helplines</button>');
+}
+
+/* \u2500\u2500 3. EMERGENCY CONTACTS \u2500\u2500 */
+function openEmergencyContacts(){
+  openP('&#x1F4DE; Emergency Contacts',
+    '<div class="card card-red"><div style="font-size:.62rem;font-weight:800;color:#fca5a5;margin-bottom:.42rem">Global Emergency Numbers</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.65);line-height:2.05">'
+      +'&#x1F1EA;&#x1F1FA; <b>Europe:</b> 112<br>'
+      +'&#x1F1FA;&#x1F1F8; <b>USA &amp; Canada:</b> 911<br>'
+      +'&#x1F1EC;&#x1F1E7; <b>United Kingdom:</b> 999<br>'
+      +'&#x1F1E6;&#x1F1FA; <b>Australia:</b> 000<br>'
+      +'&#x1F1EE;&#x1F1F3; <b>India:</b> 112<br>'
+      +'&#x1F1F3;&#x1F1EC; <b>Nigeria:</b> 112 / 199<br>'
+      +'&#x1F1F0;&#x1F1EA; <b>Kenya:</b> 999 / 112<br>'
+      +'&#x1F1EA;&#x1F1F9; <b>Ethiopia:</b> 911<br>'
+      +'&#x1F1FA;&#x1F1EC; <b>Uganda:</b> 999 / 112<br>'
+      +'&#x1F30D; <b>Most countries:</b> 112'
+    +'</div></div>'
+    +'<div class="card"><div style="font-size:.62rem;font-weight:800;margin-bottom:.38rem">Humanitarian Organisations</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.65);line-height:2">'
+      +'&#x1F4DE; <b>UNHCR:</b> unhcr.org/contact<br>'
+      +'&#x1F4DE; <b>ICRC (Red Cross):</b> +41 22 734 60 01<br>'
+      +'&#x1F4DE; <b>MSF:</b> msf.org/contact<br>'
+      +'&#x1F4DE; <b>IOM:</b> +41 22 717 91 11<br>'
+      +'&#x1F4DE; <b>WHO:</b> +41 22 791 21 11<br>'
+      +'&#x1F4DE; <b>Red Cross (Global):</b> icrc.org'
+    +'</div></div>');
+}
+
+/* \u2500\u2500 4. CRISIS HELPLINES \u2500\u2500 */
+function openCrisisLines(){
+  openP('&#x26A1; Crisis Helplines',
+    '<div class="card card-red"><div style="font-size:.62rem;font-weight:800;color:#fca5a5;margin-bottom:.4rem">24/7 Mental Health &amp; Crisis Support</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.65);line-height:2.05">'
+      +'&#x1F4DE; <b>Crisis Text Line (US):</b> Text HOME to 741741<br>'
+      +'&#x1F4DE; <b>Samaritans (UK):</b> 116 123<br>'
+      +'&#x1F4DE; <b>Lifeline (Australia):</b> 13 11 14<br>'
+      +'&#x1F4DE; <b>iCall (India):</b> 9152987821<br>'
+      +'&#x1F4DE; <b>Befrienders (Global):</b> befrienders.org<br>'
+      +'&#x1F4DE; <b>Crisis Services Canada:</b> 1-833-456-4566<br>'
+      +'&#x1F4DE; <b>IASP (Global):</b> iasp.info/resources/Crisis_Centres'
+    +'</div></div>'
+    +'<div class="card card-blue"><div style="font-size:.52rem;color:rgba(240,246,255,.6);line-height:1.75">You are not alone. Trained counsellors are available 24/7. Please reach out if you need support.</div></div>');
+}
+
+/* \u2500\u2500 5. EMERGENCY QR CARD \u2500\u2500 */
+function openEmergencyQR(){
+  var name=piUser&&piUser.username?piUser.username:'User';
+  var qr='https://api.qrserver.com/v1/create-qr-code/?size=180x180&data='+encodeURIComponent('UNHCR.pi Emergency Card\
+User: @'+name+'\
+Emergency: 112\
+App: UNHCR Community Platform');
+  openP('&#x1F4F1; Emergency QR Card',
+    '<div style="text-align:center;padding:.5rem 0">'
+      +'<div style="font-size:.5rem;color:rgba(240,246,255,.38);margin-bottom:.6rem">Shareable emergency information card. Show to first responders.</div>'
+      +'<img src="'+qr+'" style="width:160px;height:160px;border-radius:12px;background:#fff;padding:8px;display:block;margin:0 auto" onerror="this.style.display=\'none\'">'
+      +'<div style="font-family:monospace;font-size:.72rem;font-weight:800;color:#0ea5e9;margin:.6rem 0">@'+name+'</div>'
+      +'<div style="font-size:.5rem;color:rgba(240,246,255,.42);margin-bottom:.6rem;line-height:1.75">Emergency: 112 &middot; UNHCR.pi Community</div>'
+      +'<button class="btn-p" onclick="if(navigator.share)navigator.share({title:\'UNHCR.pi Emergency Card\',text:\'Emergency contacts for @'+name+'\',url:\'https://unhcr-web.pages.dev\'}).catch(function(){});else toast(\'Share: unhcr-web.pages.dev\',\'s\')">&#x1F4F1; Share Card</button>'
+    +'</div>');
+}
+
+/* \u2500\u2500 6. FIRST AID & CPR \u2500\u2500 */
+function openFirstAid(){
+  openP('&#x1F9BA; First Aid &amp; CPR',
+    '<div class="card card-red"><div style="font-size:.62rem;font-weight:800;color:#fca5a5;margin-bottom:.4rem">&#x2764;&#xFE0F; CPR \u2014 Cardiopulmonary Resuscitation</div>'
+    +'<div class="guide-item"><div class="guide-num">1</div>Check scene is safe. Call 112 immediately.</div>'
+    +'<div class="guide-item"><div class="guide-num">2</div>Check responsiveness \u2014 tap shoulders, shout "Are you okay?"</div>'
+    +'<div class="guide-item"><div class="guide-num">3</div>30 chest compressions \u2014 hard and fast, centre of chest.</div>'
+    +'<div class="guide-item"><div class="guide-num">4</div>2 rescue breaths \u2014 tilt head, lift chin, seal mouth.</div>'
+    +'<div class="guide-item"><div class="guide-num">5</div>Continue 30:2 cycle until help arrives.</div>'
+    +'</div>'
+    +'<div class="card card-orange"><div style="font-size:.62rem;font-weight:800;margin-bottom:.38rem">Essential First Aid</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.65);line-height:1.9">'
+      +'&#x1F4A7; <b>Bleeding:</b> Apply firm pressure with clean cloth. Elevate if possible.<br>'
+      +'&#x1F525; <b>Burns:</b> Cool under running water for 10+ minutes. Cover loosely.<br>'
+      +'&#x1F9B4; <b>Choking:</b> 5 back blows between shoulder blades, then 5 abdominal thrusts.<br>'
+      +'&#x1F4A4; <b>Unconscious:</b> Recovery position \u2014 on side, airway clear.<br>'
+      +'&#x1F9CA; <b>Heat stroke:</b> Move to cool area, cool body with water, call 112.'
+    +'</div></div>'
+    +'<div class="card"><div style="font-size:.5rem;color:rgba(240,246,255,.45);line-height:1.75">Always call emergency services first. First aid is a bridge until professional help arrives.</div></div>');
+}
+
+/* \u2500\u2500 7. EMERGENCY PREPAREDNESS \u2500\u2500 */
+function openPreparedness(){
+  openP('&#x1F4D6; Emergency Preparedness',
+    '<div class="card card-orange"><div style="font-size:.62rem;font-weight:800;margin-bottom:.4rem">&#x1F9F3; 72-Hour Emergency Kit</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.62);line-height:1.9">'
+      +'&#x1F4A7; Water: 4 litres per person per day<br>'
+      +'&#x1F35E; Food: 3-day non-perishable supply<br>'
+      +'&#x1F9BA; First aid kit with medications<br>'
+      +'&#x1F526; Flashlight and extra batteries<br>'
+      +'&#x1F4F1; Charged power bank<br>'
+      +'&#x1F4C4; Copies of important documents<br>'
+      +'&#x1F4B0; Emergency cash<br>'
+      +'&#x1F9E5; Warm clothing and blanket<br>'
+      +'&#x1F511; Whistle to signal for help<br>'
+      +'&#x1F5FA; Local maps (offline)'
+    +'</div></div>'
+    +'<div class="card"><div style="font-size:.62rem;font-weight:800;margin-bottom:.35rem">Before an Emergency</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.62);line-height:1.9">'
+      +'&#x1F4CD; Know 2+ evacuation routes from home<br>'
+      +'&#x1F3E5; Know location of nearest hospital<br>'
+      +'&#x1F4DE; Save emergency contacts offline<br>'
+      +'&#x1F91D; Connect with your community network<br>'
+      +'&#x1F4C5; Practice your emergency plan regularly'
+    +'</div></div>');
+}
+
+/* \u2500\u2500 8. EVACUATION PLANNING \u2500\u2500 */
+function openEvacuation(){
+  openP('&#x1F690; Evacuation Planning',
+    '<div class="card card-red"><div style="font-size:.62rem;font-weight:800;color:#fca5a5;margin-bottom:.38rem">6-Step Evacuation Plan</div>'
+    +'<div class="guide-item"><div class="guide-num">1</div>Identify at least 2 evacuation routes from your home and workplace.</div>'
+    +'<div class="guide-item"><div class="guide-num">2</div>Choose a family meeting point that everyone knows.</div>'
+    +'<div class="guide-item"><div class="guide-num">3</div>Pack your go-bag: documents, water, food, first aid, phone charger.</div>'
+    +'<div class="guide-item"><div class="guide-num">4</div>Keep your vehicle fuelled and ready.</div>'
+    +'<div class="guide-item"><div class="guide-num">5</div>Know locations of emergency shelters in your area.</div>'
+    +'<div class="guide-item"><div class="guide-num">6</div>Always follow official emergency service instructions.</div>'
+    +'</div>');
+}
+
+/* \u2500\u2500 9. EMERGENCY CHECKLIST \u2500\u2500 */
+function openEmergencyChecklist(){
+  var items=['Call emergency services (112)','Move to safe location','Alert family members','Grab emergency go-bag','Turn off gas/electricity if safe','Lock your home if time allows','Follow evacuation route','Contact community network','Check on vulnerable neighbours'];
+  var html='<div style="font-size:.5rem;color:rgba(240,246,255,.38);margin-bottom:.5rem">Quick emergency action checklist. Tap items as you complete them.</div>';
+  items.forEach(function(item,i){
+    var key='ec_'+i;
+    var done=_docs[key];
+    html+='<div class="doc-item'+(done?' done':'')+'" onclick="toggleDoc(\''+key+'\')">'
+      +'<div class="doc-chk">'+(done?'&#x2713;':'')+'</div>'
+      +'<div class="doc-label">'+item+'</div>'
+    +'</div>';
+  });
+  html+='<button class="btn-o" onclick="[\'ec_0\',\'ec_1\',\'ec_2\',\'ec_3\',\'ec_4\',\'ec_5\',\'ec_6\',\'ec_7\',\'ec_8\'].forEach(function(k){_docs[k]=false;});saveDocs();openEmergencyChecklist()">Reset Checklist</button>';
+  openP('&#x1F4CB; Emergency Checklist',html);
+}
+
+/* \u2500\u2500 10. SURVIVAL GUIDE \u2500\u2500 */
+function openSurvivalGuide(){
+  openP('&#x1F9F0; Survival Guide',
+    '<div class="card card-orange"><div style="font-size:.62rem;font-weight:800;margin-bottom:.38rem">Essential Survival Priorities</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.62);line-height:1.9">'
+      +'&#x1F6E1; <b>1. Safety:</b> Get away from danger first. Nothing else matters.<br>'
+      +'&#x1F4A7; <b>2. Water:</b> 3 days without water is critical. Prioritise finding clean water.<br>'
+      +'&#x1F31E; <b>3. Shelter:</b> Protect from elements \u2014 heat, cold, rain, wind.<br>'
+      +'&#x1F35E; <b>4. Food:</b> 3 weeks without food is survivable. Water first.<br>'
+      +'&#x1F6A8; <b>5. Signal:</b> Let rescuers find you. Use mirror, whistle, bright colours.<br>'
+      +'&#x1F9E0; <b>6. First aid:</b> Treat injuries to prevent infection.<br>'
+      +'&#x1F91D; <b>7. Community:</b> People survive better together.'
+    +'</div></div>'
+    +'<div class="card"><div style="font-size:.62rem;font-weight:800;margin-bottom:.35rem">Water Safety</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.62);line-height:1.9">'
+      +'Boil water for 1 minute before drinking if uncertain about safety.<br>'
+      +'Collect rainwater in clean containers.<br>'
+      +'Avoid stagnant water \u2014 risk of disease.'
+    +'</div></div>');
+}
+
+/* \u2500\u2500 11. DISASTER CENTER \u2500\u2500 */
+function openDisasterCenter(){
+  openP('&#x1F4A1; Disaster Preparedness Center',
+    '<div class="card card-orange"><div style="font-size:.62rem;font-weight:800;margin-bottom:.38rem">Choose a Disaster Type</div></div>'
+    +'<button class="sym-opt" onclick="openDisasterTopic(\'fire\')">&#x1F525; Fire Safety</button>'
+    +'<button class="sym-opt" onclick="openDisasterTopic(\'flood\')">&#x1F4A7; Flood Safety</button>'
+    +'<button class="sym-opt" onclick="openDisasterTopic(\'earthquake\')">&#x1F30B; Earthquake Safety</button>'
+    +'<button class="sym-opt" onclick="openDisasterTopic(\'heatwave\')">&#x2600;&#xFE0F; Heatwave Safety</button>'
+    +'<button class="sym-opt" onclick="openDisasterGuide()">&#x1F300; All Disasters Guide</button>');
+}
+
+function openDisasterTopic(type){
+  var content={
+    fire:{t:'&#x1F525; Fire Safety',c:'<b>If fire breaks out:</b><br>1. Alert everyone \u2014 shout "FIRE!"<br>2. Call 112 immediately<br>3. Evacuate using nearest safe exit<br>4. Stay low \u2014 smoke rises<br>5. Do NOT use elevators<br>6. Close doors to slow fire spread<br>7. Meet at designated assembly point<br><br><b>Fire Prevention:</b><br>Never leave cooking unattended<br>Keep flammable items away from heat<br>Check smoke detectors monthly'},
+    flood:{t:'&#x1F4A7; Flood Safety',c:'<b>Before a flood:</b><br>Move valuables to higher levels<br>Prepare emergency kit<br>Know your evacuation route<br><br><b>During a flood:</b><br>Never walk in moving water (15cm can knock you down)<br>Never drive through floodwater<br>Move to higher ground immediately<br>Turn off utilities at main switches<br><br><b>After a flood:</b><br>Return only when authorities say safe<br>Boil water before drinking'},
+    earthquake:{t:'&#x1F30B; Earthquake Safety',c:'<b>During an earthquake:</b><br>DROP, COVER, HOLD ON<br>Get under sturdy table or desk<br>Stay away from windows<br>If outdoors: move away from buildings<br><br><b>After an earthquake:</b><br>Check for injuries and hazards<br>Expect aftershocks<br>Avoid damaged buildings<br>Do not use elevators<br>Listen to emergency broadcasts'},
+    heatwave:{t:'&#x2600;&#xFE0F; Heatwave Safety',c:'<b>During extreme heat:</b><br>Stay indoors during hottest hours (11am-3pm)<br>Drink water regularly \u2014 even if not thirsty<br>Wear light, loose-fitting clothing<br>Use fans or air conditioning<br>Check on elderly and vulnerable neighbours<br><br><b>Heat stroke signs:</b><br>High body temperature, confusion, no sweating<br>Call 112 immediately for heat stroke<br>Cool body with wet cloths while waiting'},
+  };
+  var d=content[type]||{t:'Disaster Guide',c:'Information coming soon.'};
+  openP(d.t,'<div class="card card-orange"><div style="font-size:.52rem;color:rgba(240,246,255,.65);line-height:1.9">'+d.c+'</div></div>');
+}
+
+function openDisasterGuide(){openDisasterCenter();}
+
+/* \u2500\u2500 12. HEALTHCARE \u2500\u2500 */
+function openHealthcare(){
+  openP('&#x1FA7A; Healthcare Directory',
+    '<div class="card card-green"><div style="font-size:.62rem;font-weight:800;margin-bottom:.38rem">International Health Organisations</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.65);line-height:2">'
+      +'&#x1F4DE; <b>Red Cross:</b> +41 22 734 60 01<br>'
+      +'&#x1F4DE; <b>MSF (Doctors Without Borders):</b> msf.org<br>'
+      +'&#x1F4DE; <b>WHO Emergency:</b> +41 22 791 21 11<br>'
+      +'&#x1F4DE; <b>CDC (US):</b> +1 800 232 4636<br>'
+      +'&#x1F4DE; <b>UNICEF Health:</b> unicef.org/health'
+    +'</div></div>'
+    +'<div class="card"><div style="font-size:.62rem;font-weight:800;margin-bottom:.35rem">Mental Health Lines</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.65);line-height:1.9">'
+      +'Crisis Text Line (US): HOME to 741741<br>'
+      +'Samaritans (UK): 116 123<br>'
+      +'Befrienders (Global): befrienders.org'
+    +'</div></div>');
+}
+function openHospitalFinder(){openP('&#x1F3E5; Hospital Finder','<div class="map-ph" onclick="openServicesFinder()"><div class="map-ph-i">&#x1F5FA;</div><div class="map-ph-t">Find Nearest Hospital</div><div class="map-ph-s">Use Services Finder to locate hospitals</div></div>'+openServicesFinder_html());}
+function openClinicFinder(){openP('&#x1FA7A; Clinic Finder','<div class="map-ph" onclick="openServicesFinder()"><div class="map-ph-i">&#x1F5FA;</div><div class="map-ph-t">Find Nearest Clinic</div><div class="map-ph-s">Use Services Finder to locate clinics</div></div>'+openServicesFinder_html());}
+function openServicesFinder_html(){return '<button class="btn-p" onclick="openServicesFinder()">&#x1F4CD; Open Services Finder</button>';}
+
+/* \u2500\u2500 13. MENTAL HEALTH \u2500\u2500 */
+function openMentalHealth(){
+  openP('&#x1F9E0; Mental Health Support',
+    '<div class="card card-blue"><div style="font-size:.62rem;font-weight:800;margin-bottom:.35rem">&#x1F499; You Are Not Alone</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.58);line-height:1.85">Mental health is as important as physical health. Reaching out for help is a sign of strength, not weakness.</div></div>'
+    +'<div class="card"><div style="font-size:.62rem;font-weight:800;margin-bottom:.38rem">24/7 Support Lines</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.65);line-height:2.05">'
+      +'&#x1F4DE; Crisis Text (US): Text HOME to 741741<br>'
+      +'&#x1F4DE; Samaritans (UK/IE): 116 123<br>'
+      +'&#x1F4DE; Lifeline (AU): 13 11 14<br>'
+      +'&#x1F4DE; iCall (India): 9152987821<br>'
+      +'&#x1F4DE; Befrienders (Global): befrienders.org<br>'
+      +'&#x1F4DE; Crisis Services Canada: 1-833-456-4566'
+    +'</div></div>'
+    +'<div class="card card-green"><div style="font-size:.52rem;color:rgba(240,246,255,.58);line-height:1.85">For displaced persons experiencing trauma, UNHCR offers psychosocial support in many field locations. Visit unhcr.org to find support near you.</div></div>');
+}
+
+/* \u2500\u2500 14. DISEASE PREVENTION \u2500\u2500 */
+function openDiseasePrev(){
+  openP('&#x1F4A9; Disease Prevention',
+    '<div class="card card-green"><div style="font-size:.62rem;font-weight:800;margin-bottom:.38rem">Basic Prevention Measures</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.62);line-height:1.9">'
+      +'&#x1F9FC; Wash hands with soap for 20+ seconds<br>'
+      +'&#x1F4A7; Drink only clean, safe water<br>'
+      +'&#x1F9B5; Avoid touching face with unwashed hands<br>'
+      +'&#x1F637; Cover coughs and sneezes<br>'
+      +'&#x1F6AB; Avoid contact with sick individuals<br>'
+      +'&#x1F48A; Keep vaccinations up to date<br>'
+      +'&#x1F969; Cook food thoroughly<br>'
+      +'&#x1F5D1; Dispose of waste safely'
+    +'</div></div>');
+}
+
+/* \u2500\u2500 15. NUTRITION \u2500\u2500 */
+function openNutrition(){
+  openP('&#x1F955; Nutrition Education',
+    '<div class="card card-green"><div style="font-size:.62rem;font-weight:800;margin-bottom:.38rem">Basic Nutrition</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.62);line-height:1.9">'
+      +'&#x1F331; Eat a variety of fruits and vegetables daily<br>'
+      +'&#x1F9C0; Include protein sources: legumes, eggs, meat, fish<br>'
+      +'&#x1F35E; Whole grains for sustained energy<br>'
+      +'&#x1F4A7; Drink enough clean water \u2014 8+ glasses per day<br>'
+      +'&#x1F6AB; Limit processed, sugary and salty foods<br>'
+      +'&#x1F476; Children need extra nutritional care'
+    +'</div></div>'
+    +'<div class="card"><div style="font-size:.62rem;font-weight:800;margin-bottom:.35rem">Emergency Nutrition</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.62);line-height:1.85">Malnutrition in emergencies is life-threatening for children under 5. Contact MSF, UNICEF or WFP for nutritional aid support in crisis areas.</div></div>');
+}
+
+/* \u2500\u2500 16. SHELTER \u2500\u2500 */
+function openShelter(){
+  openP('&#x1F3E0; Shelter Directory',
+    '<div class="card card-orange"><div style="font-size:.62rem;font-weight:800;margin-bottom:.38rem">Finding Emergency Shelter</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.62);line-height:1.9">'
+      +'&#x1F3E5; Contact local government emergency office<br>'
+      +'&#x1F91D; Red Cross / Red Crescent local branch<br>'
+      +'&#x1F4DE; UNHCR field office (refugees and asylum seekers)<br>'
+      +'&#x26EA; Local religious institutions (churches, mosques)<br>'
+      +'&#x1F3EB; Schools designated as emergency shelters<br>'
+      +'&#x1F4DE; IOM: +41 22 717 91 11'
+    +'</div></div>'
+    +'<div class="card"><div style="font-size:.62rem;font-weight:800;margin-bottom:.35rem">For Displaced Persons</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.62);line-height:1.85">Contact UNHCR or IOM at the nearest field office. They provide shelter, protection and support for displaced populations. Find offices at unhcr.org</div></div>');
+}
+function openDisplacement(){openShelter();}
+function openHousing(){openShelter();}
+
+/* \u2500\u2500 17. LEGAL AID \u2500\u2500 */
+function openLegalAid(){
+  openP('&#x2696;&#xFE0F; Legal Aid Directory',
+    '<div class="card card-blue"><div style="font-size:.62rem;font-weight:800;margin-bottom:.38rem">Free Legal Assistance</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.65);line-height:2">'
+      +'&#x2696;&#xFE0F; <b>UNHCR Legal Protection:</b> unhcr.org/legal<br>'
+      +'&#x2696;&#xFE0F; <b>UNHCR Legal Aid:</b> Available in 135+ countries<br>'
+      +'&#x2696;&#xFE0F; <b>ICRC Legal Support:</b> icrc.org<br>'
+      +'&#x2696;&#xFE0F; <b>Local Bar Associations:</b> Often provide pro bono services<br>'
+      +'&#x2696;&#xFE0F; <b>Law School Clinics:</b> Free legal advice in many cities<br>'
+      +'&#x2696;&#xFE0F; <b>IRC:</b> rescue.org/topic/legal-assistance'
+    +'</div></div>');
+}
+
+/* \u2500\u2500 18. RIGHTS \u2500\u2500 */
+function openRights(){
+  openP('&#x1F4DC; Know Your Rights',
+    '<div class="card card-blue"><div style="font-size:.62rem;font-weight:800;margin-bottom:.38rem">Universal Declaration of Human Rights</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.65);line-height:1.95">'
+      +'&#x2714; Right to life, liberty and personal security<br>'
+      +'&#x2714; Right to seek asylum from persecution<br>'
+      +'&#x2714; Right to education and healthcare<br>'
+      +'&#x2714; Right to freedom from discrimination<br>'
+      +'&#x2714; Right to family unity<br>'
+      +'&#x2714; Right to freedom of movement<br>'
+      +'&#x2714; Right to a fair hearing and due process<br>'
+      +'&#x2714; Right to freedom of thought and religion<br>'
+      +'Source: UN UDHR (1948)'
+    +'</div></div>');
+}
+
+/* \u2500\u2500 19. INTERNATIONAL PROTECTION \u2500\u2500 */
+function openProtection(){
+  openP('&#x1F30D; International Protection',
+    '<div class="card card-blue"><div style="font-size:.62rem;font-weight:800;margin-bottom:.38rem">Refugee Protection</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.65);line-height:1.85">If you are fleeing persecution, war or violence, you may be entitled to international protection under the 1951 Refugee Convention.</div></div>'
+    +'<div class="card"><div style="font-size:.62rem;font-weight:800;margin-bottom:.35rem">How to Seek Protection</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.62);line-height:1.9">'
+      +'1. Contact nearest UNHCR office: unhcr.org<br>'
+      +'2. Request asylum at a border or immigration office<br>'
+      +'3. Contact IOM for migration assistance: iom.int<br>'
+      +'4. Seek legal aid from local legal organisations'
+    +'</div></div>');
+}
+
+/* \u2500\u2500 20. PUBLIC SERVICES \u2500\u2500 */
+function openPublicServices(){
+  openP('&#x1F4C2; Public Services Guide',
+    '<div class="card card-blue"><div style="font-size:.62rem;font-weight:800;margin-bottom:.38rem">Accessing Public Services</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.62);line-height:1.9">'
+      +'&#x1F3E5; <b>Healthcare:</b> Most countries provide emergency care regardless of status<br>'
+      +'&#x1F4DA; <b>Education:</b> Children\'s right to education is protected internationally<br>'
+      +'&#x1FA7A; <b>Vaccination:</b> Many countries provide vaccines to all residents<br>'
+      +'&#x1F3E0; <b>Social support:</b> Contact local government welfare office<br>'
+      +'&#x2696;&#xFE0F; <b>Legal aid:</b> Available free in many jurisdictions'
+    +'</div></div>');
+}
+
+/* \u2500\u2500 21. EDUCATION \u2500\u2500 */
+function openEducation(){
+  openP('&#x1F4DA; Education Resources',
+    '<div class="card card-purple"><div style="font-size:.62rem;font-weight:800;margin-bottom:.38rem">Free Online Learning</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.65);line-height:2">'
+      +'&#x1F4BB; <b>Khan Academy:</b> khanacademy.org (All ages)<br>'
+      +'&#x1F4BB; <b>Coursera:</b> coursera.org (Free to audit)<br>'
+      +'&#x1F4BB; <b>edX:</b> edx.org (University courses free)<br>'
+      +'&#x1F4BB; <b>Duolingo:</b> duolingo.com (Language learning)<br>'
+      +'&#x1F4BB; <b>UNHCR Learning:</b> learn.unhcr.org<br>'
+      +'&#x1F4BB; <b>FutureLearn:</b> futurelearn.com<br>'
+      +'&#x1F4BB; <b>MIT OpenCourseWare:</b> ocw.mit.edu'
+    +'</div></div>');
+}
+
+/* \u2500\u2500 22. DIGITAL LITERACY \u2500\u2500 */
+function openDigitalLiteracy(){
+  openP('&#x1F4BB; Digital Literacy',
+    '<div class="card card-purple"><div style="font-size:.62rem;font-weight:800;margin-bottom:.38rem">Essential Digital Skills</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.62);line-height:1.9">'
+      +'&#x1F4BB; Basic computer and smartphone use<br>'
+      +'&#x1F310; Safe internet browsing<br>'
+      +'&#x1F4E7; Email communication<br>'
+      +'&#x1F4F1; Mobile money and digital payments<br>'
+      +'&#x1F50D; Online job searching<br>'
+      +'&#x1F512; Online privacy and security'
+    +'</div></div>'
+    +'<div class="card"><div style="font-size:.62rem;font-weight:800;margin-bottom:.35rem">Learn Digital Skills Free</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.62);line-height:1.85">GCFGlobal.org offers free digital literacy courses. Google Digital Garage provides certified digital skills training at no cost.</div></div>');
+}
+
+/* \u2500\u2500 23. SCHOLARSHIPS \u2500\u2500 */
+function openScholarships(){
+  openP('&#x1F393; Scholarships',
+    '<div class="card card-purple"><div style="font-size:.62rem;font-weight:800;margin-bottom:.38rem">Humanitarian Scholarships</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.65);line-height:2">'
+      +'&#x1F393; <b>DAFI (UNHCR):</b> University scholarships for refugees<br>'
+      +'&#x1F393; <b>Mastercard Foundation:</b> Africa-focused tertiary scholarships<br>'
+      +'&#x1F393; <b>Aga Khan Foundation:</b> Postgraduate scholarships<br>'
+      +'&#x1F393; <b>Jesuit Refugee Service:</b> Education support programs<br>'
+      +'&#x1F393; <b>UNHCR Connected Learning:</b> Distance learning support<br>'
+      +'&#x1F393; Many universities offer refugee fee waivers \u2014 ask directly'
+    +'</div></div>');
+}
+
+/* \u2500\u2500 24. LANGUAGE LEARNING \u2500\u2500 */
+function openLanguageLearning(){
+  openP('&#x1F5E3; Language Learning',
+    '<div class="card card-purple"><div style="font-size:.62rem;font-weight:800;margin-bottom:.38rem">Free Language Resources</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.65);line-height:2">'
+      +'&#x1F4BB; <b>Duolingo:</b> 40+ languages free<br>'
+      +'&#x1F4BB; <b>BBC Languages:</b> languages.bbc.co.uk<br>'
+      +'&#x1F4BB; <b>Language Transfer:</b> Completely free audio courses<br>'
+      +'&#x1F4BB; <b>iTalki:</b> Connect with native speakers<br>'
+      +'&#x1F4BB; <b>Anki:</b> Flashcard app for vocabulary'
+    +'</div></div>');
+}
+
+/* \u2500\u2500 25. SKILLS DEVELOPMENT \u2500\u2500 */
+function openSkillsDev(){
+  openP('&#x1F4AA; Skills Development',
+    '<div class="card card-purple"><div style="font-size:.62rem;font-weight:800;margin-bottom:.38rem">Build Employable Skills</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.62);line-height:1.9">'
+      +'&#x1F4BB; Digital skills (Google, Microsoft free courses)<br>'
+      +'&#x1F527; Vocational training (check local NGOs)<br>'
+      +'&#x1F4CA; Business skills (Coursera, edX)<br>'
+      +'&#x1F91D; Leadership (UNHCR learning portal)<br>'
+      +'&#x1F4DD; Writing and communication<br>'
+      +'&#x1F5E3; Public speaking and advocacy'
+    +'</div></div>');
+}
+
+/* \u2500\u2500 26. COMMUNITY RESOURCES \u2500\u2500 */
+function openCommunityRes(){
+  openP('&#x1F3D8; Community Resources',
+    '<div class="card card-blue"><div style="font-size:.62rem;font-weight:800;margin-bottom:.38rem">Local Community Support</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.62);line-height:1.9">'
+      +'&#x1F3E0; Community centres and local NGOs<br>'
+      +'&#x26EA; Religious community support networks<br>'
+      +'&#x1F468;&#x200D;&#x1F469;&#x200D;&#x1F467; Family support services<br>'
+      +'&#x1F91D; Mutual aid networks<br>'
+      +'&#x1F4DE; Local government social services'
+    +'</div></div>');
+}
+
+/* \u2500\u2500 27. WELLBEING CHECK-IN \u2500\u2500 */
+function openWellbeing(){
+  var moods=[{e:'\ud83d\ude04',l:'Great'},{e:'\ud83d\ude42',l:'Good'},{e:'\ud83d\ude10',l:'Okay'},{e:'\ud83d\ude1f',l:'Low'},{e:'\ud83d\ude22',l:'Struggling'}];
+  var today=new Date().toDateString();
+  var tm=_mood.find(function(m){return m.date===today;});
+  var html='<div style="font-size:.65rem;font-weight:700;margin-bottom:.35rem">How are you feeling today?</div>'
+    +'<div style="font-size:.5rem;color:rgba(240,246,255,.42);margin-bottom:.6rem;line-height:1.75">Your wellbeing matters. Responses are stored only on your device.</div>'
+    +'<div class="mood-grid">';
+  moods.forEach(function(m,i){
+    var sel=tm&&tm.score===i?' sel':'';
+    html+='<div class="mood-btn'+sel+'" onclick="logMood('+i+',\''+m.l+'\')">'
+      +'<div class="mood-ico">'+m.e+'</div><div class="mood-lbl">'+m.l+'</div></div>';
+  });
+  html+='</div>';
+  if(_mood.length>0){
+    html+='<div style="font-size:.5rem;font-weight:700;color:rgba(240,246,255,.42);text-transform:uppercase;letter-spacing:.08em;margin:.65rem 0 .28rem">7-Day Wellbeing Chart</div>';
+    html+='<div class="mood-bar-wrap">';
+    _mood.slice(-7).forEach(function(m){
+      var h=Math.max(5,Math.round((4-m.score)/4*48)+4);
+      var col=m.score<=1?'#10b981':m.score===2?'#f59e0b':'#ef4444';
+      html+='<div class="mood-bar" style="height:'+h+'px;background:'+col+'"></div>';
+    });
+    html+='</div>';
+    var avg=_mood.slice(-7).reduce(function(s,m){return s+m.score;},0)/Math.min(_mood.length,7);
+    html+='<div style="font-size:.48rem;color:rgba(240,246,255,.38)">7-day average: <b style="color:#0ea5e9">'+(['Great \ud83d\ude04','Good \ud83d\ude42','Okay \ud83d\ude10','Low \ud83d\ude1f','Struggling \ud83d\ude22'][Math.round(avg)])+'</b></div>';
+  }
+  if(tm&&tm.score>=3){
+    html+='<div class="card card-blue" style="margin-top:.55rem"><div style="font-size:.6rem;font-weight:700;margin-bottom:.28rem">&#x1F499; Support Available</div>'
+      +'<div style="font-size:.5rem;color:rgba(240,246,255,.58);line-height:1.75">Crisis Text Line: HOME to 741741<br>Samaritans: 116 123 (UK)<br>Befrienders: befrienders.org</div>'
+      +'<button onclick="openMentalHealth()" style="background:rgba(14,165,233,.18);border:1px solid rgba(14,165,233,.3);border-radius:8px;padding:.32rem .65rem;color:#0ea5e9;font-size:.55rem;font-weight:700;cursor:pointer;margin-top:.38rem;min-height:34px">More Support &#x203A;</button>'
+    +'</div>';
+  }
+  openP('&#x1F60A; Daily Wellbeing',html);
+}
+function logMood(score,label){
+  var today=new Date().toDateString();
+  _mood=_mood.filter(function(m){return m.date!==today;});
+  _mood.push({date:today,score:score,label:label});
+  if(_mood.length>30)_mood=_mood.slice(-30);
+  saveMood();
+  toast('Mood logged: '+label,'s');
+  openWellbeing();
+}
+
+/* \u2500\u2500 28. DOCUMENT CHECKLIST \u2500\u2500 */
+var DOC_LIST=[
+  {id:'passport',ico:'&#x1F6C2;',label:'Passport / Travel Document',sub:'Keep valid & photocopied'},
+  {id:'id',ico:'&#x1FAA6;',label:'National ID Card',sub:'Both sides photocopied'},
+  {id:'birth',ico:'&#x1F4CB;',label:'Birth Certificate',sub:'For all family members'},
+  {id:'asylum',ico:'&#x1F4C4;',label:'Asylum / Refugee Documents',sub:'Registration & status papers'},
+  {id:'medical',ico:'&#x1F3E5;',label:'Medical Records',sub:'Prescriptions, vaccination cards'},
+  {id:'education',ico:'&#x1F393;',label:'Education Certificates',sub:'Diplomas, transcripts'},
+  {id:'bank',ico:'&#x1F4B3;',label:'Bank / Financial Documents',sub:'Account details, cards'},
+  {id:'property',ico:'&#x1F3E0;',label:'Property Documents',sub:'Lease, ownership papers'},
+  {id:'emergency',ico:'&#x1F4DE;',label:'Emergency Contact List',sub:'Printed \u2014 not just on phone'},
+  {id:'insurance',ico:'&#x1F6E1;',label:'Insurance Documents',sub:'Health, life, property'},
+  {id:'photos',ico:'&#x1F4F7;',label:'Family Photos',sub:'For identification purposes'},
+  {id:'goback',ico:'&#x1F392;',label:'Go-Bag Ready',sub:'72-hour emergency kit packed'},
+];
+function openDocChecklist(){
+  var done=Object.keys(_docs).filter(function(k){return DOC_LIST.find(function(d){return d.id===k;})&&_docs[k];}).length;
+  var pct=Math.round(done/DOC_LIST.length*100);
+  var html='<div style="display:flex;align-items:center;gap:.85rem;margin-bottom:.65rem">'
+    +'<div class="pring"><svg width="76" height="76"><circle cx="38" cy="38" r="31" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="6.5"/>'
+      +'<circle cx="38" cy="38" r="31" fill="none" stroke="#0ea5e9" stroke-width="6.5" stroke-dasharray="'+(194.8*pct/100)+' 194.8" stroke-linecap="round"/></svg>'
+      +'<div class="pring-val">'+pct+'%</div></div>'
+    +'<div><div style="font-size:.7rem;font-weight:800">'+done+' of '+DOC_LIST.length+'</div>'
+      +'<div style="font-size:.48rem;color:rgba(240,246,255,.38);margin-top:.04rem">Documents secured</div>'
+      +(pct===100?'<div style="font-size:.48rem;color:#10b981;margin-top:.08rem">&#x2705; All secured!</div>':'<div style="font-size:.48rem;color:#f59e0b;margin-top:.08rem">&#x26A0; '+(DOC_LIST.length-done)+' remaining</div>')
+    +'</div></div>';
+  DOC_LIST.forEach(function(d){
+    var dn=_docs[d.id];
+    html+='<div class="doc-item'+(dn?' done':'')+'" onclick="toggleDoc(\''+d.id+'\')">'
+      +'<div class="doc-chk">'+(dn?'&#x2713;':'')+'</div>'
+      +'<div style="font-size:1.05rem;flex-shrink:0">'+d.ico+'</div>'
+      +'<div style="flex:1;min-width:0"><div class="doc-label">'+d.label+'</div><div class="doc-sub">'+d.sub+'</div></div>'
+    +'</div>';
+  });
+  html+='<button class="btn-p" style="margin-top:.5rem" onclick="exportDocChecklist()">&#x1F4E4; Export Checklist</button>';
+  openP('&#x2705; Document Checklist',html);
+}
+function toggleDoc(id){_docs[id]=!_docs[id];saveDocs();openDocChecklist();toast(_docs[id]?'Secured \u2705':'Unmarked','s');}
+function exportDocChecklist(){
+  var txt='UNHCR.pi Document Safety Checklist\
+'+('=').repeat(36)+'\
+';
+  DOC_LIST.forEach(function(d){txt+=(_docs[d.id]?'[\u2713] ':'[ ] ')+d.label+'\
+';});
+  txt+='\
+Generated by UNHCR Community Platform';
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain'}));
+  a.download='document-checklist.txt';a.click();
+  toast('Checklist exported','s');
+}
+
+/* \u2500\u2500 29. PHRASE CARDS \u2500\u2500 */
+var PHRASES={
+  English:[{e:'I need help',t:'I need help',p:''},{e:'Where is the hospital?',t:'Where is the hospital?',p:''},{e:'I am a refugee',t:'I am a refugee',p:''},{e:'Please call a doctor',t:'Please call a doctor',p:''},{e:'I need food and water',t:'I need food and water',p:''},{e:'I need shelter',t:'I need shelter',p:''},{e:'Where is the UNHCR office?',t:'Where is the UNHCR office?',p:''},{e:'I have lost my family',t:'I have lost my family',p:''},{e:'I need legal help',t:'I need legal help',p:''},{e:'Is there a safe place nearby?',t:'Is there a safe place nearby?',p:''}],
+  'Arabic - \u0627\u0644\u0639\u0631\u0628\u064a\u0629':[{e:'I need help',t:'\u0623\u062d\u062a\u0627\u062c \u0645\u0633\u0627\u0639\u062f\u0629',p:'Ana ahtaju musaada'},{e:'Where is the hospital?',t:'\u0623\u064a\u0646 \u0627\u0644\u0645\u0633\u062a\u0634\u0641\u0649\u061f',p:'Ayna al-mustashfa?'},{e:'I am a refugee',t:'\u0623\u0646\u0627 \u0644\u0627\u062c\u0626',p:'Ana laji'},{e:'Please call a doctor',t:'\u0627\u062a\u0635\u0644 \u0628\u0637\u0628\u064a\u0628 \u0645\u0646 \u0641\u0636\u0644\u0643',p:'Ittasil bi-tabib'},{e:'I need food and water',t:'\u0623\u062d\u062a\u0627\u062c \u0637\u0639\u0627\u0645\u0627\u064b \u0648\u0645\u0627\u0621\u064b',p:'Ahtaju taam wa ma'},{e:'I need shelter',t:'\u0623\u062d\u062a\u0627\u062c \u0645\u0623\u0648\u0649',p:"Ahtaju ma'wa"},{e:'Where is the UNHCR office?',t:'\u0623\u064a\u0646 \u0645\u0643\u062a\u0628 \u0627\u0644\u0645\u0641\u0648\u0636\u064a\u0629\u061f',p:'Ayna maktab al-mufawadiyya?'},{e:'I have lost my family',t:'\u0641\u0642\u062f\u062a \u0639\u0627\u0626\u0644\u062a\u064a',p:"Faqadtu a'ilati"},{e:'I need legal help',t:'\u0623\u062d\u062a\u0627\u062c \u0645\u0633\u0627\u0639\u062f\u0629 \u0642\u0627\u0646\u0648\u0646\u064a\u0629',p:'Ahtaju musaada qanuniyya'},{e:'Is there a safe place nearby?',t:'\u0647\u0644 \u064a\u0648\u062c\u062f \u0645\u0643\u0627\u0646 \u0622\u0645\u0646 \u0642\u0631\u064a\u0628\u061f',p:'Hal yujadu makan amin qarib?'}],
+  'French - Fran\u00e7ais':[{e:'I need help',t:"J'ai besoin d'aide",p:'Zhay buh-zwah ded'},{e:'Where is the hospital?',t:"O\u00f9 est l'h\u00f4pital?",p:'Oo ay loh-pee-tal?'},{e:'I am a refugee',t:'Je suis r\u00e9fugi\u00e9',p:'Zhuh swee ray-foo-zhyay'},{e:'Please call a doctor',t:"Appelez un m\u00e9decin s'il vous pla\u00eet",p:'Ah-play uh may-duh-san'},{e:'I need food and water',t:"J'ai besoin de nourriture et d'eau",p:'Zhay buh-zwah duh noo-ree-teur'},{e:'I need shelter',t:"J'ai besoin d'un abri",p:'Zhay buh-zwah duh nab-ree'},{e:'Where is the UNHCR office?',t:'O\u00f9 est le bureau du HCR?',p:'Oo ay luh byoo-roh doo ash-say-err?'},{e:'I have lost my family',t:"J'ai perdu ma famille",p:'Zhay pair-doo ma fa-mee'},{e:'I need legal help',t:"J'ai besoin d'aide juridique",p:'Zhay buh-zwah duh zhoo-ree-deek'},{e:'Is there a safe place nearby?',t:'Y a-t-il un endroit s\u00fbr \u00e0 proximit\u00e9?',p:'Ee ah-teel uh ahn-drwah sewr?'}],
+  'Spanish - Espa\u00f1ol':[{e:'I need help',t:'Necesito ayuda',p:'Neh-seh-SEE-toh ah-YOO-dah'},{e:'Where is the hospital?',t:'\u00bfD\u00f3nde est\u00e1 el hospital?',p:'DON-deh es-TAH el os-pee-TAL?'},{e:'I am a refugee',t:'Soy refugiado',p:'Soy reh-foo-HYAH-doh'},{e:'Please call a doctor',t:'Por favor llame a un m\u00e9dico',p:'Por fa-VOR YAH-meh ah oon MEH-dee-koh'},{e:'I need food and water',t:'Necesito comida y agua',p:'Neh-seh-SEE-toh koh-MEE-dah ee AH-gwah'},{e:'I need shelter',t:'Necesito refugio',p:'Neh-seh-SEE-toh reh-FOO-hyoh'},{e:'Where is the UNHCR office?',t:'\u00bfD\u00f3nde est\u00e1 la oficina del ACNUR?',p:'DON-deh es-TAH la oh-FEE-see-nah?'},{e:'I have lost my family',t:'He perdido a mi familia',p:'Eh pehr-DEE-doh ah mee fa-MEE-lyah'},{e:'I need legal help',t:'Necesito ayuda legal',p:'Neh-seh-SEE-toh ah-YOO-dah leh-GAL'},{e:'Is there a safe place nearby?',t:'\u00bfHay un lugar seguro cerca?',p:'AY oon loo-GAR seh-GOO-roh SEHR-kah?'}],
+  Hausa:[{e:'I need help',t:'Ina bukata taimako',p:'Ee-nah boo-KAH-tah tie-MAH-koh'},{e:'Where is the hospital?',t:'Ina asibiti?',p:'Ee-nah ah-see-BEE-tee?'},{e:'I am a refugee',t:'Ni dan gudun hijira ne',p:'Nee dan goo-doon hee-JEE-rah'},{e:'Please call a doctor',t:'Don Allah kira likita',p:'Dohn Al-LAH KEE-rah lee-KEE-tah'},{e:'I need food and water',t:'Ina bukata abinci da ruwa',p:'Ee-nah boo-KAH-tah ah-BIN-chee'},{e:'I need shelter',t:'Ina bukata matsuguni',p:'Ee-nah boo-KAH-tah mat-soo-GOO-nee'},{e:'Where is the UNHCR office?',t:'Ina ofishin UNHCR?',p:'Ee-nah oh-FEE-sheen UNHCR?'},{e:'I have lost my family',t:'Na rasa iyalina',p:'Nah RAH-sah ee-yah-LEE-nah'},{e:'I need legal help',t:"Ina bukata taimakon shari'a",p:'Ee-nah boo-KAH-tah tie-MAH-kon'},{e:'Is there a safe place nearby?',t:'Akwai wuri mai aminci kusa?',p:'AK-why woo-REE my ah-MIN-chee'}],
+};
+var _phraseL='English';
+function openPhraseCards(){
+  var langs=Object.keys(PHRASES);
+  var phrases=PHRASES[_phraseL]||PHRASES.English;
+  var html='<div style="font-size:.5rem;color:rgba(240,246,255,.38);margin-bottom:.45rem">Tap any phrase to copy it. Switch language below.</div>'
+    +'<div class="lang-row">';
+  langs.forEach(function(l){html+='<span class="lpill'+(l===_phraseL?' on':'')+'" onclick="switchPL(\''+l.replace(/'/g,"\\'")+'\')">'+(l.split(' - ')[0])+'</span>';});
+  html+='</div><div style="margin-top:.5rem">';
+  phrases.forEach(function(p){
+    html+='<div class="phrase-card" onclick="copyTxt(\''+p.e+'\')">'
+      +'<div class="phr-en">&#x1F310; '+p.e+'</div>'
+      +(p.t&&p.t!==p.e?'<div class="phr-tr">'+p.t+'</div>':'')
+      +(p.p?'<div class="phr-ph">'+p.p+'</div>':'')
+    +'</div>';
+  });
+  html+='</div>';
+  openP('&#x1F4AC; Phrase Cards \u2014 '+_phraseL.split(' - ')[0],html);
+}
+function switchPL(l){_phraseL=l;openPhraseCards();}
+function copyTxt(t){if(navigator.clipboard)navigator.clipboard.writeText(t).then(function(){toast('Copied: '+t,'s');}).catch(function(){toast(t);});else toast(t);}
+
+/* \u2500\u2500 30. SYMPTOM CHECKER \u2500\u2500 */
+var SYM={
+  start:{q:'What is your main concern?',opts:[{l:'\ud83c\udf21\ufe0f Fever / High Temperature',n:'fever'},{l:'\ud83d\ude2e\u200d\ud83d\udca8 Breathing Difficulty',n:'breath'},{l:'\ud83e\udd15 Injury / Bleeding',n:'injury'},{l:'\ud83e\udde0 Mental Health / Emotional Distress',n:'mental'},{l:'\ud83e\udd22 Nausea / Vomiting / Diarrhea',n:'stomach'},{l:'\ud83d\ude35 Unconscious / Not Responding',n:'unconsious'}]},
+  fever:{q:'Fever severity?',opts:[{l:'Very high (40\u00b0C+) or infant under 3 months',n:'re'},{l:'High (38.5-40\u00b0C) for over 3 days',n:'ru'},{l:'Mild fever, few days',n:'rm'}]},
+  breath:{q:'Breathing difficulty severity?',opts:[{l:'Cannot breathe \u2014 lips turning blue',n:'re'},{l:'Significant difficulty with chest pain',n:'re'},{l:'Mild shortness of breath',n:'ru'}]},
+  injury:{q:'Injury severity?',opts:[{l:'Severe bleeding \u2014 not stopping',n:'re'},{l:'Deep wound or possible broken bone',n:'re'},{l:'Minor cuts or bruises',n:'rs'}]},
+  mental:{q:'Mental state?',opts:[{l:'Thoughts of harming myself or others',n:'rc'},{l:'Unable to function \u2014 severe distress',n:'ru'},{l:'Anxious, sad, struggling to cope',n:'rme'}]},
+  stomach:{q:'Stomach symptoms severity?',opts:[{l:'Blood in vomit or stool / severe pain',n:'re'},{l:'Cannot keep any fluids down',n:'ru'},{l:'Mild discomfort',n:'rs'}]},
+  unconsious:{q:'Is the person breathing?',opts:[{l:'Not breathing',n:'rcpr'},{l:'Breathing but unconscious',n:'re'}]},
+  re:{result:true,lv:'red',title:'\ud83d\udea8 CALL EMERGENCY SERVICES NOW',body:'This appears to be a medical emergency. Call 112 immediately. Do not wait.',fn:'openEmergencyContacts()'},
+  ru:{result:true,lv:'orange',title:'\u26a0\ufe0f Seek Medical Care Today',body:'Please visit the nearest clinic or hospital today. Do not delay. Call 112 if symptoms worsen rapidly.',fn:'openHealthcare()'},
+  rm:{result:true,lv:'blue',title:'\u2139\ufe0f Monitor & Rest',body:'Rest, stay hydrated and monitor symptoms. Seek medical care if fever persists over 3 days or worsens.',fn:'openFirstAid()'},
+  rs:{result:true,lv:'green',title:'\u2705 Self-Care Recommended',body:'Rest and monitor. Clean wounds carefully. Seek medical care if symptoms worsen or do not improve in 48 hours.',fn:'openFirstAid()'},
+  rc:{result:true,lv:'red',title:'\ud83d\udc99 Crisis Support \u2014 Call Now',body:'You are not alone. Please call a crisis helpline immediately. They are available 24/7 and want to help you.',fn:'openCrisisLines()'},
+  rme:{result:true,lv:'blue',title:'\ud83d\udc99 Mental Health Support',body:'Your feelings are valid. Reaching out is strength. Consider calling a support line or speaking to someone you trust.',fn:'openMentalHealth()'},
+  rcpr:{result:true,lv:'red',title:'\ud83d\udea8 START CPR + CALL 112 NOW',body:'30 chest compressions then 2 rescue breaths. Repeat. Call emergency services immediately while performing CPR.',fn:'openFirstAid()'},
+};
+function openSymptomChecker(){showSym('start');}
+function showSym(id){
+  var n=SYM[id];if(!n)return;
+  if(n.result){
+    var bg=n.lv==='red'?'rgba(239,68,68,.14)':n.lv==='orange'?'rgba(245,158,11,.12)':n.lv==='blue'?'rgba(14,165,233,.12)':'rgba(16,185,129,.1)';
+    var bc=n.lv==='red'?'rgba(239,68,68,.32)':n.lv==='orange'?'rgba(245,158,11,.3)':n.lv==='blue'?'rgba(14,165,233,.3)':'rgba(16,185,129,.28)';
+    var tc=n.lv==='red'?'#fca5a5':n.lv==='orange'?'#fde68a':n.lv==='blue'?'#93c5fd':'#6ee7b7';
+    var html='<div style="background:'+bg+';border:1.5px solid '+bc+';border-radius:14px;padding:1rem;margin-bottom:.55rem">'
+      +'<div style="font-size:.72rem;font-weight:800;color:'+tc+';margin-bottom:.28rem">'+n.title+'</div>'
+      +'<div style="font-size:.52rem;color:rgba(240,246,255,.68);line-height:1.8">'+n.body+'</div>'
+    +'</div>'
+    +'<button class="btn-p" onclick="'+n.fn+'" style="margin-bottom:.3rem">Get Help &#x203A;</button>'
+    +'<button class="btn-o" onclick="showSym(\'start\')">&#x1F504; Start Over</button>'
+    +'<div style="font-size:.42rem;color:rgba(240,246,255,.25);margin-top:.45rem;line-height:1.75">&#x26A0; General guidance only. Not a medical diagnosis. Always consult a qualified healthcare professional.</div>';
+    document.getElementById('ptitle').textContent='&#x1F9EA; Symptom Checker';
+    document.getElementById('pbody').innerHTML=html;
+    if(document.getElementById('ov').className!=='open')document.getElementById('ov').className='open';
+    return;
+  }
+  var html='<div style="font-size:.65rem;font-weight:700;margin-bottom:.45rem">'+n.q+'</div>';
+  n.opts.forEach(function(o){html+='<button class="sym-opt" onclick="showSym(\''+o.n+'\')">'+o.l+'</button>';});
+  html+='<div style="font-size:.42rem;color:rgba(240,246,255,.25);margin-top:.45rem;line-height:1.75">&#x26A0; General guidance only. Not a medical diagnosis.</div>';
+  document.getElementById('ptitle').textContent='&#x1F9EA; Symptom Checker';
+  document.getElementById('pbody').innerHTML=html;
+  if(document.getElementById('ov').className!=='open')document.getElementById('ov').className='open';
+}
+
+/* \u2500\u2500 31. SERVICES FINDER \u2500\u2500 */
+var SVCS={
+  Nigeria:[{n:'UNHCR Nigeria',t:'Refugee Protection',a:'Abuja, Lagos, Maiduguri',p:'+234-9-461-4800'},{n:'NEMA',t:'Emergency Management',a:'Federal Secretariat, Abuja',p:'0800-CALL-NEMA'},{n:'ICRC Nigeria',t:'Humanitarian Aid',a:'Abuja & field offices',p:'+234-9-461-2540'},{n:'MSF Nigeria',t:'Medical Emergency',a:'Maiduguri, Lagos',p:'+234-803-304-4574'}],
+  Kenya:[{n:'UNHCR Kenya',t:'Refugee Protection',a:'Nairobi, Kakuma, Dadaab',p:'+254-20-434-9000'},{n:'Kenya Red Cross',t:'Emergency Relief',a:'Nairobi HQ',p:'+254-20-395-0000'},{n:'MSF Kenya',t:'Medical Emergency',a:'Nairobi',p:'+254-20-374-1066'},{n:'IOM Kenya',t:'Migration Support',a:'Nairobi',p:'+254-20-386-5000'}],
+  Ethiopia:[{n:'UNHCR Ethiopia',t:'Refugee Protection',a:'Addis Ababa',p:'+251-11-544-0100'},{n:'Ethiopian Red Cross',t:'Emergency Relief',a:'Addis Ababa',p:'+251-11-515-3500'},{n:'IOM Ethiopia',t:'Migration Support',a:'Addis Ababa',p:'+251-11-649-3900'},{n:'MSF Ethiopia',t:'Medical Emergency',a:'Multiple locations',p:'+251-11-661-3752'}],
+  Uganda:[{n:'UNHCR Uganda',t:'Refugee Protection',a:'Kampala & settlements',p:'+256-41-234-940'},{n:'Uganda Red Cross',t:'Emergency Relief',a:'Kampala',p:'+256-41-258-701'},{n:'OPM Uganda',t:'Refugee Management',a:'Office of Prime Minister',p:'+256-41-425-2025'},{n:'IOM Uganda',t:'Migration Support',a:'Kampala',p:'+256-41-434-8035'}],
+  Germany:[{n:'UNHCR Germany',t:'Refugee Protection',a:'Berlin',p:'+49-30-202-202-0'},{n:'Caritas Germany',t:'Social Support',a:'Nationwide offices',p:'+49-761-200-0'},{n:'DRK Red Cross',t:'Emergency Relief',a:'Nationwide',p:'0800-365-000-0'},{n:'AWO Germany',t:'Welfare Services',a:'Nationwide',p:'+49-30-26309-0'}],
+  Somalia:[{n:'UNHCR Somalia',t:'Refugee Protection',a:'Mogadishu, Hargeisa, Bossaso',p:'+254-20-434-9000'},{n:'ICRC Somalia',t:'Humanitarian Aid',a:'Mogadishu',p:'+254-20-693-3800'},{n:'WFP Somalia',t:'Food Assistance',a:'Mogadishu',p:'+254-20-762-4000'}],
+  Sudan:[{n:'UNHCR Sudan',t:'Refugee Protection',a:'Khartoum, Port Sudan',p:'+249-183-471-371'},{n:'ICRC Sudan',t:'Humanitarian Aid',a:'Khartoum',p:'+249-183-570-600'},{n:'MSF Sudan',t:'Medical Emergency',a:'Multiple locations',p:'+249-183-478-882'}],
+};
+function openServicesFinder(){
+  var countries=Object.keys(SVCS);
+  var html='<div style="font-size:.5rem;color:rgba(240,246,255,.38);margin-bottom:.5rem">Select your country to find local humanitarian service offices.</div>'
+    +'<select id="svc-c" class="inp" onchange="showSvcs(this.value)">'
+    +'<option value="">\u2014 Select Country \u2014</option>'
+    +countries.map(function(c){return '<option>'+c+'</option>';}).join('')
+    +'</select>'
+    +'<div id="svc-res"><div style="font-size:.55rem;color:rgba(240,246,255,.28);text-align:center;padding:1rem">Select a country to see services</div></div>';
+  openP('&#x1F4CD; Services Finder',html);
+}
+function showSvcs(c){
+  var el=document.getElementById('svc-res');
+  if(!el||!c)return;
+  var s=SVCS[c];
+  if(!s){el.innerHTML='<div style="font-size:.55rem;color:rgba(240,246,255,.28);padding:1rem;text-align:center">No data for this country yet.</div>';return;}
+  el.innerHTML=s.map(function(sv){
+    return '<div class="svc-card"><div class="svc-name">'+sv.n+'</div><div class="svc-type">'+sv.t+'</div><div class="svc-addr">&#x1F4CD; '+sv.a+'</div><div class="svc-phone">&#x1F4DE; '+sv.p+'</div></div>';
+  }).join('');
+}
+
+/* \u2500\u2500 32. NOTICE BOARD \u2500\u2500 */
+var DEFAULT_NOTICES=[
+  {id:1,author:'UNHCR.pi Team',title:'Welcome to UNHCR.pi v1.0',body:'Welcome to our independent humanitarian platform built for the Pi ecosystem. We provide emergency resources, community tools and AI support.',date:'2026-08-01',tag:'Announcement'},
+  {id:2,author:'Community Mod',title:'Volunteer Registration Open',body:'We are looking for translators, digital skills teachers and health educators. Register in the Volunteer tab.',date:'2026-08-03',tag:'Volunteer'},
+  {id:3,author:'Health Team',title:'Free Mental Health Resources',body:'New mental health support resources added for 12 languages. Access under Resources > Healthcare > Mental Health.',date:'2026-08-05',tag:'Health'},
+];
+function openNoticeBoard(){
+  var all=DEFAULT_NOTICES.concat(_notices).reverse();
+  var html='<button class="btn-p" style="margin-bottom:.65rem" onclick="openPostNotice()">&#x270F;&#xFE0F; Post a Notice</button>';
+  all.forEach(function(n){
+    html+='<div class="notice-card">'
+      +'<div class="notice-top"><div class="notice-title">'+n.title+'</div><div class="notice-date">'+n.date+'</div></div>'
+      +'<div class="notice-body">'+n.body+'</div>'
+      +'<div class="notice-foot"><span class="notice-author">by '+n.author+'</span><span class="pill pb">'+n.tag+'</span></div>'
+    +'</div>';
+  });
+  openP('&#x1F4CB; Notice Board',html);
+}
+function openPostNotice(){
+  openP('&#x270F;&#xFE0F; Post a Notice',
+    '<label class="fl">Title</label><input class="inp" id="n-t" placeholder="Notice title" maxlength="80">'
+    +'<label class="fl">Message</label><textarea class="inp" id="n-b" placeholder="Your message..." rows="3" style="resize:none;height:90px;min-height:90px"></textarea>'
+    +'<label class="fl">Tag</label><select class="inp" id="n-tag"><option>Announcement</option><option>Volunteer</option><option>Health</option><option>Emergency</option><option>Education</option><option>General</option></select>'
+    +'<button class="btn-p" onclick="postNotice()">&#x1F4CC; Post Notice</button>');
+}
+function postNotice(){
+  var t=((document.getElementById('n-t')||{}).value||'').trim();
+  var b=((document.getElementById('n-b')||{}).value||'').trim();
+  var tag=((document.getElementById('n-tag')||{}).value)||'General';
+  if(!t||!b){toast('Fill in all fields','e');return;}
+  var name=piUser&&piUser.username?'@'+piUser.username:'Community Member';
+  _notices.push({id:Date.now(),author:name,title:t,body:b,date:new Date().toISOString().slice(0,10),tag:tag});
+  saveNotices();toast('Notice posted!','s');openNoticeBoard();
+}
+
+/* \u2500\u2500 33. COMMUNITY EVENTS \u2500\u2500 */
+function openCommunityEvents(){
+  openP('&#x1F4C5; Community Events',
+    '<div class="card card-orange"><div style="font-size:.62rem;font-weight:800;margin-bottom:.35rem">Upcoming Events</div><div style="font-size:.52rem;color:rgba(240,246,255,.58);line-height:1.85">Community events and meetups are coming in UNHCR.pi v1.1. Register your interest below.</div></div>'
+    +'<div class="card"><div style="font-size:.62rem;font-weight:800;margin-bottom:.32rem">Recent Announcements</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.58);line-height:1.85">'
+      +'&#x1F4C5; <b>Aug 10:</b> Digital literacy workshop \u2014 Online<br>'
+      +'&#x1F4C5; <b>Aug 15:</b> Community health awareness \u2014 Regional<br>'
+      +'&#x1F4C5; <b>Aug 20:</b> Volunteer networking \u2014 Pi Ecosystem'
+    +'</div></div>'
+    +'<button class="btn-p" onclick="toast(\'Event interest registered!\',\'s\')">&#x1F91D; Register Interest</button>');
+}
+
+/* \u2500\u2500 34. COMMUNITY PROJECTS \u2500\u2500 */
+function openCommunityProjects(){
+  openP('&#x1F3AF; Community Projects',
+    '<div class="card card-blue"><div style="font-size:.62rem;font-weight:800;margin-bottom:.35rem">Active Projects</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.58);line-height:1.9">'
+      +'&#x1F4BB; Digital Literacy Training \u2014 Ongoing<br>'
+      +'&#x1F5E3; Multilingual Resource Translation \u2014 Ongoing<br>'
+      +'&#x1FA7A; Community Health Education \u2014 Planning<br>'
+      +'&#x1F4DA; Education Resource Expansion \u2014 Planning'
+    +'</div></div>'
+    +'<button class="btn-p" onclick="toast(\'Project interest registered!\',\'s\')">Join a Project</button>');
+}
+
+/* \u2500\u2500 35. VOLUNTEER SYSTEM \u2500\u2500 */
+function openVolOpp(name){
+  openP('&#x1F91D; '+name,
+    '<div class="card card-blue"><div style="font-size:.62rem;font-weight:800;margin-bottom:.35rem">'+name+'</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.58);line-height:1.85">Thank you for your interest in volunteering for '+name+'. Full volunteer registration and matching is coming in v1.1.</div></div>'
+    +'<label class="fl">Your relevant skills</label>'
+    +'<input class="inp" id="vol-skills" placeholder="e.g. Teaching, 5 years experience...">'
+    +'<button class="btn-p" onclick="toast(\'Interest registered for '+name+'!\',\'s\');closeP()">&#x2B50; Register Interest</button>');
+}
+function openVolRegister(){
+  openP('&#x1F91D; Volunteer Registration',
+    '<div style="font-size:.5rem;color:rgba(240,246,255,.38);margin-bottom:.5rem">Register your skills and availability. Full matching launches in v1.1.</div>'
+    +'<label class="fl">Your Skills</label><input class="inp" id="vr-skills" placeholder="e.g. Teaching, Translation, Medical...">'
+    +'<label class="fl">Languages You Speak</label><input class="inp" id="vr-langs" placeholder="e.g. English, Arabic, Hausa...">'
+    +'<label class="fl">Availability</label><select class="inp" id="vr-avail"><option>Weekdays</option><option>Weekends</option><option>Both</option><option>Online only</option></select>'
+    +'<button class="btn-p" onclick="toast(\'Registration submitted!\',\'s\');closeP()">Submit Registration</button>');
+}
+function openCommunityGroups(){
+  openP('&#x1F465; Community Groups',
+    '<div class="card card-blue"><div style="font-size:.62rem;font-weight:800;margin-bottom:.35rem">Available Groups</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.58);line-height:1.9">'
+      +'&#x1F4BB; Digital Skills Network<br>'
+      +'&#x1FA7A; Health Education Circle<br>'
+      +'&#x1F5E3; Translators & Interpreters Guild<br>'
+      +'&#x1F4DA; Education Support Group<br>'
+      +'&#x1F91D; Community Builders Network'
+    +'</div></div>'
+    +'<button class="btn-p" onclick="toast(\'Group join request sent!\',\'s\')">Join a Group</button>');
+}
+
+/* \u2500\u2500 36. RESOURCE MAP \u2500\u2500 */
+function openResourceMap(){
+  openP('&#x1F5FA; Basic Resource Map',
+    '<div class="map-ph" onclick="openServicesFinder()">'
+      +'<div class="map-ph-i">&#x1F5FA;</div>'
+      +'<div class="map-ph-t">Interactive Map</div>'
+      +'<div class="map-ph-s">Full interactive map coming in v1.1</div>'
+    +'</div>'
+    +'<div class="card card-blue"><div style="font-size:.62rem;font-weight:800;margin-bottom:.35rem">Find Services Now</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.58);line-height:1.85">Use the Services Finder to locate UNHCR, Red Cross, MSF and IOM offices in your country.</div></div>'
+    +'<button class="btn-p" onclick="openServicesFinder()">&#x1F4CD; Open Services Finder</button>');
+}
+
+/* \u2500\u2500 37. NOTES \u2500\u2500 */
+function openNotes(){
+  var html='<button class="btn-p" style="margin-bottom:.6rem" onclick="openAddNote()">&#x2795; New Note</button>';
+  if(_notes.length){
+    _notes.slice().reverse().forEach(function(n,i){
+      var idx=_notes.length-1-i;
+      html+='<div class="notice-card"><div class="notice-top"><div class="notice-title">'+n.title+'</div><div class="notice-date">'+n.date+'</div></div>'
+        +'<div class="notice-body">'+n.body+'</div>'
+        +'<button onclick="deleteNote('+idx+')" style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.22);border-radius:7px;padding:.25rem .6rem;color:#ef4444;font-size:.5rem;font-weight:600;cursor:pointer;margin-top:.3rem;min-height:32px">Delete</button>'
+      +'</div>';
+    });
+  } else {
+    html+='<div class="empty"><span class="empty-i">&#x1F4DD;</span><div class="empty-t">No notes yet</div><div class="empty-s">Tap New Note to add your first note</div></div>';
+  }
+  openP('&#x1F4DD; My Notes',html);
+}
+function openAddNote(){
+  openP('&#x2795; New Note',
+    '<label class="fl">Title</label><input class="inp" id="note-t" placeholder="Note title">'
+    +'<label class="fl">Content</label><textarea class="inp" id="note-b" placeholder="Your note..." rows="4" style="resize:none;height:110px;min-height:110px"></textarea>'
+    +'<button class="btn-p" onclick="saveNote()">Save Note</button>');
+}
+function saveNote(){
+  var t=((document.getElementById('note-t')||{}).value||'').trim();
+  var b=((document.getElementById('note-b')||{}).value||'').trim();
+  if(!t||!b){toast('Fill in title and content','e');return;}
+  _notes.push({title:t,body:b,date:new Date().toISOString().slice(0,10)});
+  saveNotes();toast('Note saved!','s');openNotes();
+}
+function deleteNote(i){_notes.splice(i,1);saveNotes();openNotes();toast('Note deleted');}
+
+/* \u2500\u2500 38. PERSONAL EMERGENCY CONTACTS \u2500\u2500 */
+function openPersonalEmergContacts(){
+  var html='<button class="btn-p" style="margin-bottom:.6rem" onclick="openAddEmergContact()">&#x2795; Add Contact</button>';
+  if(_emergContacts.length){
+    _emergContacts.forEach(function(c,i){
+      html+='<div class="svc-card"><div class="svc-name">'+c.name+'</div><div class="svc-type">'+c.relation+'</div>'
+        +'<div class="svc-phone">&#x1F4DE; '+c.phone+'</div>'
+        +'<button onclick="deleteEmergContact('+i+')" style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.22);border-radius:7px;padding:.22rem .55rem;color:#ef4444;font-size:.5rem;font-weight:600;cursor:pointer;margin-top:.3rem;min-height:30px">Remove</button>'
+      +'</div>';
+    });
+  } else {
+    html+='<div class="empty"><span class="empty-i">&#x1F4DE;</span><div class="empty-t">No emergency contacts</div><div class="empty-s">Add contacts who should be called in an emergency</div></div>';
+  }
+  openP('&#x1F4DE; Personal Emergency Contacts',html);
+}
+function openAddEmergContact(){
+  openP('&#x2795; Add Emergency Contact',
+    '<label class="fl">Full Name</label><input class="inp" id="ec-name" placeholder="Contact name">'
+    +'<label class="fl">Relationship</label><input class="inp" id="ec-rel" placeholder="e.g. Mother, Friend, Doctor">'
+    +'<label class="fl">Phone Number</label><input class="inp" id="ec-phone" type="tel" placeholder="+1234567890">'
+    +'<button class="btn-p" onclick="saveEmergContact()">Save Contact</button>');
+}
+function saveEmergContact(){
+  var n=((document.getElementById('ec-name')||{}).value||'').trim();
+  var r=((document.getElementById('ec-rel')||{}).value||'').trim();
+  var p=((document.getElementById('ec-phone')||{}).value||'').trim();
+  if(!n||!p){toast('Enter name and phone number','e');return;}
+  _emergContacts.push({name:n,relation:r,phone:p});
+  saveEmergContacts();toast('Contact saved!','s');openPersonalEmergContacts();
+}
+function deleteEmergContact(i){_emergContacts.splice(i,1);saveEmergContacts();openPersonalEmergContacts();}
+
+/* \u2500\u2500 39. DOWNLOADS \u2500\u2500 */
+function openDownloads(){
+  openP('&#x1F4E5; Downloads &amp; Offline Content',
+    '<div class="card card-blue"><div style="font-size:.62rem;font-weight:800;margin-bottom:.35rem">Available Downloads</div></div>'
+    +'<div class="res" onclick="downloadGuide(\'emergency\')"><div class="res-ico" style="background:rgba(239,68,68,.2)">&#x1F6A8;</div><div class="res-body"><div class="res-t">Emergency Preparedness Guide</div><div class="res-s">PDF \u2014 Offline ready</div></div><div class="res-a">&#x1F4E5;</div></div>'
+    +'<div class="res" onclick="downloadGuide(\'firstaid\')"><div class="res-ico" style="background:rgba(16,185,129,.2)">&#x1F9BA;</div><div class="res-body"><div class="res-t">First Aid & CPR Guide</div><div class="res-s">PDF \u2014 Offline ready</div></div><div class="res-a">&#x1F4E5;</div></div>'
+    +'<div class="res" onclick="downloadGuide(\'rights\')"><div class="res-ico" style="background:rgba(14,165,233,.2)">&#x2696;&#xFE0F;</div><div class="res-body"><div class="res-t">Know Your Rights</div><div class="res-s">PDF \u2014 Offline ready</div></div><div class="res-a">&#x1F4E5;</div></div>'
+    +'<div class="res" onclick="downloadGuide(\'evacuation\')"><div class="res-ico" style="background:rgba(245,158,11,.2)">&#x1F690;</div><div class="res-body"><div class="res-t">Evacuation Planning Guide</div><div class="res-s">PDF \u2014 Offline ready</div></div><div class="res-a">&#x1F4E5;</div></div>');
+}
+function downloadGuide(type){
+  var guides={emergency:'Emergency Preparedness Guide\
+\
+1. Build a 72-hour emergency kit\
+2. Know your evacuation routes\
+3. Keep emergency contacts saved offline\
+4. Store water (4L per person per day)\
+5. Prepare non-perishable food supply\
+\
+Emergency: Call 112',firstaid:'First Aid & CPR Guide\
+\
+CPR: 30 compressions + 2 breaths. Repeat.\
+Bleeding: Apply firm pressure.\
+Burns: Cool water 10+ minutes.\
+Choking: 5 back blows + 5 abdominal thrusts.\
+\
+Always call 112 first.',rights:'Know Your Rights\
+\
+Under the UDHR:\
+- Right to life and liberty\
+- Right to seek asylum\
+- Right to education\
+- Right to healthcare\
+- Right to family unity\
+\
+Source: UN Declaration of Human Rights',evacuation:'Evacuation Planning Guide\
+\
+1. Identify 2 evacuation routes\
+2. Choose family meeting point\
+3. Pack emergency go-bag\
+4. Keep vehicle fuelled\
+5. Know local shelter locations\
+6. Follow official instructions'};
+  var content=guides[type]||'Guide content';
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([content+'\
+\
+UNHCR Community Platform'],{type:'text/plain'}));
+  a.download='unhcr-pi-'+type+'-guide.txt';
+  a.click();
+  toast('Guide downloaded!','s');
+}
+
+/* \u2500\u2500 40. SAVED RESOURCES \u2500\u2500 */
+function openSaved(){
+  openP('&#x1F4BE; Saved Resources',
+    _saved.length
+      ?_saved.map(function(s,i){return '<div class="notice-card"><div class="notice-title">'+s+'</div><button onclick="_saved.splice('+i+',1);saveSaved();openSaved()" style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.2);border-radius:7px;padding:.22rem .55rem;color:#ef4444;font-size:.5rem;cursor:pointer;margin-top:.25rem;min-height:28px">Remove</button></div>';}).join('')
+      :'<div class="empty"><span class="empty-i">&#x1F4BE;</span><div class="empty-t">No saved items</div><div class="empty-s">Resources you bookmark will appear here</div></div>');
+}
+
+/* \u2500\u2500 41. AI ASSISTANT \u2500\u2500 */
+function openAI(){
+  openP('&#x1F916; AI Humanitarian Assistant',
+    '<div class="ai-msg"><b>UNHCR.pi AI</b><br><br>Hello @'+(piUser&&piUser.username?piUser.username:'Friend')+'! I am your humanitarian AI assistant. I can help you find emergency resources, answer questions about humanitarian rights, health, shelter, and more.<br><br>Full AI responses are coming in v1.1. For now I will guide you to the right resources.</div>'
+    +'<label class="fl">Your Question</label>'
+    +'<input class="inp" id="ai-q" placeholder="e.g. How do I find emergency shelter?" oninput="">'
+    +'<button class="btn-p" onclick="askAI()">Ask Assistant</button>'
+    +'<div id="ai-res" style="margin-top:.5rem"></div>');
+}
+function askAI(){
+  var q=((document.getElementById('ai-q')||{}).value||'').toLowerCase().trim();
+  if(!q)return;
+  var res_map=[
+    {k:['shelter','housing','accommodation'],r:'For emergency shelter, I recommend checking our Shelter Directory. Contact your local Red Cross or UNHCR office directly.',fn:'openShelter()'},
+    {k:['hospital','doctor','medical','clinic','health'],r:'For healthcare resources, I can show you our Healthcare Directory with clinic and hospital finders.',fn:'openHealthcare()'},
+    {k:['food','water','nutrition','eat'],r:'For food and water assistance, contact WFP (World Food Programme) or your local Red Cross branch.',fn:'openNutrition()'},
+    {k:['legal','right','asylum','refugee','protection'],r:'For legal assistance and refugee protection, I recommend our Legal Aid Directory and Know Your Rights guide.',fn:'openLegalAid()'},
+    {k:['danger','emergency','help','safe'],r:'If you are in immediate danger, call 112 or your local emergency number immediately. I can show you emergency contacts.',fn:'openEmergencyContacts()'},
+    {k:['mental','stress','anxious','sad','depress','trauma'],r:'Your mental health matters. Please reach out \u2014 crisis lines are available 24/7.',fn:'openMentalHealth()'},
+    {k:['education','school','learn','study'],r:'I can show you free education resources including Khan Academy, Coursera and UNHCR Connected Learning.',fn:'openEducation()'},
+    {k:['volunteer','help','contribute','give'],r:'I can connect you with volunteer opportunities in our community.',fn:"goTab('volunteer',document.querySelectorAll('.nb')[3])"},
+  ];
+  var match=null;
+  for(var i=0;i<res_map.length;i++){
+    for(var j=0;j<res_map[i].k.length;j++){
+      if(q.includes(res_map[i].k[j])){match=res_map[i];break;}
+    }
+    if(match)break;
+  }
+  var el=document.getElementById('ai-res');
+  if(!el)return;
+  if(match){
+    el.innerHTML='<div class="ai-msg"><b>AI:</b> '+match.r+'</div>'
+      +'<button class="btn-p" onclick="'+match.fn+'">View Resources &#x203A;</button>';
+  } else {
+    el.innerHTML='<div class="ai-msg"><b>AI:</b> Thank you for your question. Please browse our Resources tab for comprehensive information, or contact us at unhcr.platform@gmail.com. Full AI responses are coming in v1.1.</div>';
+  }
+}
+
+/* \u2500\u2500 42. SEARCH \u2500\u2500 */
+function openSearch(){
+  openP('&#x1F50D; Global Search',
+    '<input class="srch-inp" id="gs-q" placeholder="Search all resources..." autofocus oninput="globalSearch(this.value)" style="width:100%;margin-bottom:.5rem">'
+    +'<div id="gs-res"><div style="font-size:.55rem;color:rgba(240,246,255,.28);text-align:center;padding:1rem">Start typing to search...</div></div>');
+}
+function globalSearch(q){
+  if(!q){document.getElementById('gs-res').innerHTML='';return;}
+  q=q.toLowerCase();
+  var all=[
+    {t:'Emergency Contacts',ico:'&#x1F4DE;',fn:'openEmergencyContacts()'},
+    {t:'Crisis Helplines',ico:'&#x26A1;',fn:'openCrisisLines()'},
+    {t:'First Aid & CPR',ico:'&#x1F9BA;',fn:'openFirstAid()'},
+    {t:'SOS Center',ico:'&#x1F198;',fn:'openSOSCenter()'},
+    {t:'Emergency QR Card',ico:'&#x1F4F1;',fn:'openEmergencyQR()'},
+    {t:'Symptom Checker',ico:'&#x1F9EA;',fn:'openSymptomChecker()'},
+    {t:'Healthcare Directory',ico:'&#x1FA7A;',fn:'openHealthcare()'},
+    {t:'Mental Health Support',ico:'&#x1F9E0;',fn:'openMentalHealth()'},
+    {t:'Shelter Directory',ico:'&#x1F3E0;',fn:'openShelter()'},
+    {t:'Services Finder',ico:'&#x1F4CD;',fn:'openServicesFinder()'},
+    {t:'Legal Aid',ico:'&#x2696;&#xFE0F;',fn:'openLegalAid()'},
+    {t:'Know Your Rights',ico:'&#x1F4DC;',fn:'openRights()'},
+    {t:'International Protection',ico:'&#x1F30D;',fn:'openProtection()'},
+    {t:'Education Resources',ico:'&#x1F4DA;',fn:'openEducation()'},
+    {t:'Digital Literacy',ico:'&#x1F4BB;',fn:'openDigitalLiteracy()'},
+    {t:'Scholarships',ico:'&#x1F393;',fn:'openScholarships()'},
+    {t:'Phrase Cards',ico:'&#x1F4AC;',fn:'openPhraseCards()'},
+    {t:'Document Checklist',ico:'&#x2705;',fn:'openDocChecklist()'},
+    {t:'Wellbeing Check-in',ico:'&#x1F60A;',fn:'openWellbeing()'},
+    {t:'Notice Board',ico:'&#x1F4CB;',fn:'openNoticeBoard()'},
+    {t:'Humanitarian Timeline',ico:'&#x1F4DC;',fn:'openHumanitarianTimeline()'},
+    {t:'Digital Safety',ico:'&#x1F512;',fn:'openDigitalSafety()'},
+    {t:'Financial Literacy',ico:'&#x1F4B0;',fn:'openFinancialLiteracy()'},
+    {t:'Scam Awareness',ico:'&#x1F3AF;',fn:'openScamAwareness()'},
+    {t:'Resource Map',ico:'&#x1F5FA;',fn:'openResourceMap()'},
+    {t:'Emergency Preparedness',ico:'&#x1F4D6;',fn:'openPreparedness()'},
+    {t:'Evacuation Planning',ico:'&#x1F690;',fn:'openEvacuation()'},
+    {t:'Survival Guide',ico:'&#x1F9F0;',fn:'openSurvivalGuide()'},
+    {t:'Community Events',ico:'&#x1F4C5;',fn:'openCommunityEvents()'},
+    {t:'Volunteer Registration',ico:'&#x1F91D;',fn:'openVolRegister()'},
+    {t:'AI Assistant',ico:'&#x1F916;',fn:'openAI()'},
+    {t:'My Notes',ico:'&#x1F4DD;',fn:'openNotes()'},
+    {t:'Downloads',ico:'&#x1F4E5;',fn:'openDownloads()'},
+    {t:'FAQs',ico:'&#x2753;',fn:'openFAQs()'},
+    {t:'Humanitarian Library',ico:'&#x1F4D6;',fn:'openHumLibrary()'},
+    {t:'Nutrition Education',ico:'&#x1F955;',fn:'openNutrition()'},
+    {t:'Disease Prevention',ico:'&#x1F489;',fn:'openDiseasePrev()'},
+    {t:'Language Learning',ico:'&#x1F5E3;',fn:'openLanguageLearning()'},
+    {t:'Skills Development',ico:'&#x1F4AA;',fn:'openSkillsDev()'},
+  ];
+  var matches=all.filter(function(a){return a.t.toLowerCase().includes(q);});
+  var el=document.getElementById('gs-res');
+  if(!el)return;
+  el.innerHTML=matches.length
+    ?matches.map(function(m){
+      return '<div class="res" onclick="'+m.fn+'">'
+        +'<div class="res-ico" style="background:rgba(14,165,233,.15)">'+m.ico+'</div>'
+        +'<div class="res-body"><div class="res-t">'+m.t+'</div></div>'
+        +'<div class="res-a">&#x203A;</div></div>';
+    }).join('')
+    :'<div class="empty"><span class="empty-i">&#x1F50D;</span><div class="empty-t">No results for "'+q+'"</div></div>';
+}
+
+/* \u2500\u2500 43. LANGUAGE SETTINGS \u2500\u2500 */
+function openLang(){
+  var langs=['English','Arabic - \u0627\u0644\u0639\u0631\u0628\u064a\u0629','French - Fran\u00e7ais','Spanish - Espa\u00f1ol','Swahili - Kiswahili','Hausa','Somali','Tigrinya','Pashto','Dari','Burmese','Ukrainian'];
+  openP('&#x1F310; Language Settings',
+    '<div style="font-size:.5rem;color:rgba(240,246,255,.38);margin-bottom:.5rem">Select your preferred language. Full translation coming in v1.1.</div>'
+    +langs.map(function(l){
+      return '<div onclick="setLang(\''+l+'\')" style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.'+(l===_lang?'18':'07')+');border-radius:10px;padding:.65rem .85rem;margin-bottom:.28rem;cursor:pointer;min-height:48px;touch-action:manipulation">'
+        +'<span style="font-size:.65rem;font-weight:'+(l===_lang?'800':'600')+';color:'+(l===_lang?'#0ea5e9':'#F0F6FF')+'">'+l+'</span>'
+        +(l===_lang?'<span style="color:#0ea5e9;font-size:.85rem">&#x2713;</span>':'<span style="color:rgba(240,246,255,.22);font-size:.85rem">&#x203A;</span>')
+      +'</div>';
+    }).join(''));
+}
+function setLang(l){_lang=l;try{localStorage.setItem('unhcr_lang',l);}catch(e){}toast('Language set to '+l.split(' - ')[0],'s');openLang();}
+
+/* \u2500\u2500 44. HUMANITARIAN TIMELINE \u2500\u2500 */
+function openHumanitarianTimeline(){
+  var events=[
+    {y:'1948',t:'Universal Declaration of Human Rights',b:'The UN adopted the UDHR, establishing fundamental human rights for all people everywhere.',c:'#0ea5e9'},
+    {y:'1950',t:'UNHCR Established',b:'The United Nations High Commissioner for Refugees was established on December 14, 1950.',c:'#0ea5e9'},
+    {y:'1951',t:'Refugee Convention',b:'The 1951 Refugee Convention defined who is a refugee and outlined the rights of displaced persons.',c:'#10b981'},
+    {y:'1956',t:'Hungary Crisis',b:'First major UNHCR operation. Over 200,000 Hungarians fled after the Soviet invasion.',c:'#f59e0b'},
+    {y:'1960s',t:'African Decolonization',b:'Decolonization created massive refugee crises. UNHCR expanded operations to Africa.',c:'#8b5cf6'},
+    {y:'1967',t:'Refugee Protocol',b:'The 1967 Protocol expanded refugee protections removing geographic and temporal limits.',c:'#10b981'},
+    {y:'1984',t:'Cartagena Declaration',b:'Expanded refugee definition in Latin America \u2014 a landmark regional protection framework.',c:'#0ea5e9'},
+    {y:'1990s',t:'Balkan Conflicts',b:'Wars in Yugoslavia created Europe\'s largest refugee crisis since World War II.',c:'#ef4444'},
+    {y:'2000',t:'Global Displacement Rises',b:'World refugee population exceeded 12 million. Long-term displacement becoming the norm.',c:'#ef4444'},
+    {y:'2015',t:'Global Refugee Crisis',b:'Over 65 million displaced globally. Europe received 1 million+ refugees in a single year.',c:'#ef4444'},
+    {y:'2018',t:'Global Compact on Refugees',b:'UN member states adopted the Global Compact for improved refugee response and responsibility sharing.',c:'#10b981'},
+    {y:'2022',t:'Ukraine Displacement',b:"Russia's invasion created Europe's fastest-growing displacement crisis since WWII.",c:'#ef4444'},
+    {y:'2024',t:'100 Million Displaced',b:'For the first time in history, over 100 million people forcibly displaced worldwide.',c:'#ef4444'},
+  ];
+  var html='<div style="font-size:.5rem;color:rgba(240,246,255,.38);margin-bottom:.6rem">Key moments in humanitarian history and refugee protection.</div>';
+  events.forEach(function(ev,i){
+    html+='<div class="tl-item">'
+      +'<div style="display:flex;flex-direction:column;align-items:center;width:14px;flex-shrink:0">'
+        +'<div class="tl-dot" style="background:'+ev.c+'"></div>'
+        +(i<events.length-1?'<div style="width:2px;flex:1;background:rgba(255,255,255,.06);margin:.1rem auto"></div>':'')
+      +'</div>'
+      +'<div class="tl-body"><div class="tl-year" style="color:'+ev.c+'">'+ev.y+'</div><div class="tl-title">'+ev.t+'</div><div class="tl-text">'+ev.b+'</div></div>'
+    +'</div>';
+  });
+  openP('&#x1F4DC; Humanitarian Timeline',html);
+}
+
+/* \u2500\u2500 45. DIGITAL SAFETY \u2500\u2500 */
+function openDigitalSafety(){
+  openP('&#x1F512; Digital Safety Guide',
+    '<div class="card card-blue"><div style="font-size:.62rem;font-weight:800;margin-bottom:.38rem">&#x1F310; Online Safety</div>'
+    +'<div class="sec-item"><div class="sec-ico">&#x1F511;</div>Use strong, unique passwords for every account</div>'
+    +'<div class="sec-item"><div class="sec-ico">&#x1F4F1;</div>Enable two-factor authentication (2FA) on all accounts</div>'
+    +'<div class="sec-item"><div class="sec-ico">&#x1F515;</div>Only share personal info on secure (HTTPS) websites</div>'
+    +'<div class="sec-item"><div class="sec-ico">&#x1F4CD;</div>Be careful posting your real-time location publicly</div>'
+    +'<div class="sec-item"><div class="sec-ico">&#x1F4EC;</div>Use encrypted messaging apps (Signal, WhatsApp)</div>'
+    +'<div class="sec-item"><div class="sec-ico">&#x26A0;</div>Verify links before clicking \u2014 check the URL</div>'
+    +'<div class="sec-item"><div class="sec-ico">&#x1F4F2;</div>Keep apps and your device OS updated</div>'
+    +'</div>'
+    +'<div class="card card-red"><div style="font-size:.62rem;font-weight:800;color:#fca5a5;margin-bottom:.38rem">&#x26A0; Pi Network Safety</div>'
+    +'<div class="sec-item" style="color:#fca5a5"><div class="sec-ico">&#x274C;</div>NEVER share your Pi Wallet passphrase with anyone</div>'
+    +'<div class="sec-item" style="color:#fca5a5"><div class="sec-ico">&#x274C;</div>NEVER share your seed phrase or private key</div>'
+    +'<div class="sec-item" style="color:#fca5a5"><div class="sec-ico">&#x274C;</div>UNHCR.pi will NEVER ask for these credentials</div>'
+    +'<div class="sec-item" style="color:#fca5a5"><div class="sec-ico">&#x274C;</div>No legitimate app needs your passphrase</div>'
+    +'</div>'
+    +'<div class="card"><div style="font-size:.62rem;font-weight:800;margin-bottom:.35rem">&#x1F4F1; Device Security</div>'
+    +'<div class="sec-item"><div class="sec-ico">&#x1F512;</div>Lock device with PIN or biometric</div>'
+    +'<div class="sec-item"><div class="sec-ico">&#x1F4BE;</div>Backup important data regularly</div>'
+    +'<div class="sec-item"><div class="sec-ico">&#x1F4F5;</div>Enable remote wipe if device is lost</div>'
+    +'</div>');
+}
+
+/* \u2500\u2500 46. FINANCIAL LITERACY \u2500\u2500 */
+function openFinancialLiteracy(){
+  openP('&#x1F4B0; Financial Literacy',
+    '<div class="card card-blue"><div style="font-size:.62rem;font-weight:800;margin-bottom:.38rem">What is Pi Network?</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.62);line-height:1.85">Pi Network is a cryptocurrency project allowing users to mine Pi on mobile phones. It uses blockchain technology and the Stellar Consensus Protocol.</div></div>'
+    +'<div class="card"><div style="font-size:.62rem;font-weight:800;margin-bottom:.38rem">Pi Network Safety Rules</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.62);line-height:1.9">'
+      +'&#x2705; Use only the official Pi Browser app<br>'
+      +'&#x2705; Download Pi apps only from develop.pi<br>'
+      +'&#x2705; Never share your passphrase with any app<br>'
+      +'&#x2705; Verify apps are listed in Pi ecosystem<br>'
+      +'&#x2705; Report suspicious apps to Pi Core Team'
+    +'</div></div>'
+    +'<div class="card card-orange"><div style="font-size:.62rem;font-weight:800;margin-bottom:.38rem">General Financial Tips</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.62);line-height:1.9">'
+      +'&#x1F4B0; Build emergency fund (3-6 months expenses)<br>'
+      +'&#x1F4CA; Track spending \u2014 know where money goes<br>'
+      +'&#x1F6AB; Avoid debt for non-essential items<br>'
+      +'&#x1F4B1; Explore microfinance if banks are inaccessible<br>'
+      +'&#x1F4F1; Use mobile money for safer transfers (M-Pesa etc)'
+    +'</div></div>');
+}
+
+/* \u2500\u2500 47. SCAM AWARENESS \u2500\u2500 */
+function openScamAwareness(){
+  openP('&#x1F3AF; Scam Awareness',
+    '<div class="card card-red"><div style="font-size:.62rem;font-weight:800;color:#fca5a5;margin-bottom:.38rem">Common Humanitarian Scams</div>'
+    +'<div class="sec-item" style="color:rgba(240,246,255,.65)"><div class="sec-ico">&#x26A0;</div>Fake UNHCR registration schemes demanding payment</div>'
+    +'<div class="sec-item" style="color:rgba(240,246,255,.65)"><div class="sec-ico">&#x26A0;</div>Fraudulent visa and asylum application agents</div>'
+    +'<div class="sec-item" style="color:rgba(240,246,255,.65)"><div class="sec-ico">&#x26A0;</div>Fake job offers requiring upfront fees</div>'
+    +'<div class="sec-item" style="color:rgba(240,246,255,.65)"><div class="sec-ico">&#x26A0;</div>False promises of guaranteed refugee status</div>'
+    +'<div class="sec-item" style="color:rgba(240,246,255,.65)"><div class="sec-ico">&#x26A0;</div>Apps requesting Pi wallet passphrases</div>'
+    +'</div>'
+    +'<div class="card card-green"><div style="font-size:.62rem;font-weight:800;margin-bottom:.38rem">Protect Yourself</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.62);line-height:1.9">'
+      +'&#x2705; UNHCR services are always FREE<br>'
+      +'&#x2705; Verify organisations at unhcr.org<br>'
+      +'&#x2705; Never pay for refugee registration<br>'
+      +'&#x2705; Report scams to local authorities<br>'
+      +'&#x2705; When in doubt \u2014 do not proceed'
+    +'</div></div>');
+}
+
+/* \u2500\u2500 48. FAQS \u2500\u2500 */
+function openFAQs(){
+  var faqs=[
+    {q:'What is UNHCR.pi?',a:'UNHCR.pi is an independent community-built humanitarian information platform for the Pi ecosystem. It is NOT affiliated with the United Nations or UNHCR.'},
+    {q:'Is this app affiliated with UNHCR or the UN?',a:'No. UNHCR.pi is completely independent. It is not affiliated with, endorsed by, or operated by UNHCR, the UN, or any government body.'},
+    {q:'Can I apply for refugee status here?',a:'No. This app provides information only. For official refugee status applications, contact UNHCR directly at unhcr.org.'},
+    {q:'Is the app free to use?',a:'Yes. UNHCR.pi is completely free. We will never charge for information or humanitarian resources.'},
+    {q:'Is my data safe?',a:'All data is stored locally on your device. We do not collect or sell personal data. Pi SDK is used only for authentication.'},
+    {q:'What languages does the app support?',a:'English is the primary language. Phrase cards support Arabic, French, Spanish and Hausa. Full multilingual UI is coming in v1.1.'},
+    {q:'How do I report an issue?',a:'Contact us at unhcr.platform@gmail.com with a description of the issue you encountered.'},
+    {q:'Can I volunteer through this app?',a:'Yes. Visit the Volunteer tab to express interest. Full volunteer matching is coming in v1.1.'},
+  ];
+  var html='';
+  faqs.forEach(function(f,i){
+    html+='<div class="faq-item" id="faq-'+i+'" onclick="toggleFAQ('+i+')">'
+      +'<div class="faq-q">'+f.q+'<span>&#x203A;</span></div>'
+      +'<div class="faq-a">'+f.a+'</div>'
+    +'</div>';
+  });
+  openP('&#x2753; FAQs',html);
+}
+function toggleFAQ(i){var el=document.getElementById('faq-'+i);if(el)el.classList.toggle('open');}
+
+/* \u2500\u2500 49. HUMANITARIAN LIBRARY \u2500\u2500 */
+function openHumLibrary(){
+  openP('&#x1F4D6; Humanitarian Library',
+    '<div style="font-size:.5rem;color:rgba(240,246,255,.38);margin-bottom:.5rem">Key humanitarian documents and reference materials.</div>'
+    +'<div class="res" onclick="toast(\'Visit unhcr.org/1951-refugee-convention\')"><div class="res-ico" style="background:rgba(14,165,233,.2)">&#x1F4DC;</div><div class="res-body"><div class="res-t">1951 Refugee Convention</div><div class="res-s">Foundational refugee protection document</div></div><div class="res-a">&#x203A;</div></div>'
+    +'<div class="res" onclick="toast(\'Visit un.org/en/udhr\')"><div class="res-ico" style="background:rgba(16,185,129,.2)">&#x1F4CB;</div><div class="res-body"><div class="res-t">Universal Declaration of Human Rights</div><div class="res-s">UN UDHR (1948)</div></div><div class="res-a">&#x203A;</div></div>'
+    +'<div class="res" onclick="toast(\'Visit unhcr.org/global-trends\')"><div class="res-ico" style="background:rgba(245,158,11,.2)">&#x1F4CA;</div><div class="res-body"><div class="res-t">UNHCR Global Trends Report</div><div class="res-s">Annual displacement statistics</div></div><div class="res-a">&#x203A;</div></div>'
+    +'<div class="res" onclick="toast(\'Visit unhcr.org/global-compact-refugees\')"><div class="res-ico" style="background:rgba(124,58,237,.2)">&#x1F30D;</div><div class="res-body"><div class="res-t">Global Compact on Refugees</div><div class="res-s">2018 international framework</div></div><div class="res-a">&#x203A;</div></div>'
+    +'<div class="res" onclick="toast(\'Visit reliefweb.int\')"><div class="res-ico" style="background:rgba(239,68,68,.2)">&#x1F4F0;</div><div class="res-body"><div class="res-t">ReliefWeb</div><div class="res-s">Live humanitarian news & reports</div></div><div class="res-a">&#x203A;</div></div>');
+}
+
+/* \u2500\u2500 50. PRIVACY INFO \u2500\u2500 */
+function openPrivacyInfo(){window.location.href='/privacy-policy.html';}
+
+/* \u2500\u2500 51. DISCLAIMER \u2500\u2500 */
+function openDisclaimer(){
+  openP('&#x26A0;&#xFE0F; Disclaimer',
+    '<div class="card card-orange"><div style="font-size:.62rem;font-weight:800;color:rgba(245,158,11,.9);margin-bottom:.4rem">Important Notice</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.65);line-height:1.9">'
+      +'UNHCR.pi is an <b>independent community-built platform</b>.<br><br>'
+      +'It is <b>NOT affiliated with, endorsed by, or operated by:</b><br>'
+      +'&#x2022; The United Nations High Commissioner for Refugees (UNHCR)<br>'
+      +'&#x2022; The United Nations or any of its agencies<br>'
+      +'&#x2022; Any government or official humanitarian body<br><br>'
+      +'This platform does <b>NOT:</b><br>'
+      +'&#x2022; Process humanitarian aid or payments<br>'
+      +'&#x2022; Distribute refugee assistance<br>'
+      +'&#x2022; Handle refugee registration or asylum applications<br>'
+      +'&#x2022; Represent UNHCR, UN, or any official body<br><br>'
+      +'For official UNHCR services visit: <b style="color:#0ea5e9">unhcr.org</b>'
+    +'</div></div>');
+}
+
+/* \u2500\u2500 52. ABOUT \u2500\u2500 */
+function openAbout(){
+  openP('&#x2139;&#xFE0F; About',
+    '<div style="text-align:center;padding:.8rem 0 .6rem">'
+      +'<img src="assets/icons/logo.svg" alt="UNHCR" style="width:80px;height:80px;display:block;margin:0 auto .6rem;filter:drop-shadow(0 0 16px rgba(14,165,233,.5))">'
+      +'<div style="font-size:1.3rem;font-weight:900;letter-spacing:.04em;margin-bottom:.2rem">UNHCR</div>'
+      +'<div style="font-size:.48rem;color:rgba(240,246,255,.32);letter-spacing:.08em;text-transform:uppercase">Community Platform &middot; v1.0</div>'
+    +'</div>'
+    +'<div class="card"><div style="font-size:.6rem;font-weight:800;margin-bottom:.38rem">About This App</div>'
+      +'<div style="font-size:.52rem;color:rgba(240,246,255,.62);line-height:1.9">'
+        +'A humanitarian information and community support platform for the Pi ecosystem. Providing emergency resources, shelter, healthcare directories, education, legal aid, and volunteer opportunities.<br><br>'
+        +'&#x1F4E7; <b>Contact:</b> unhcr.platform@gmail.com'
+      +'</div></div>'
+    +'<div class="card card-orange"><div style="font-size:.5rem;color:rgba(245,158,11,.82);line-height:1.8">'
+      +'&#x26A0; Independent community platform. Not affiliated with, endorsed by, or operated by the United Nations High Commissioner for Refugees (UNHCR) or the United Nations.'
+    +'</div></div>'
+    +'<div style="display:flex;gap:.5rem;margin-top:.3rem">'
+      +'<button class="btn-o" style="font-size:.58rem;min-height:44px;flex:1" onclick="window.location.href=\'privacy-policy.html\'">Privacy Policy</button>'
+      +'<button class="btn-o" style="font-size:.58rem;min-height:44px;flex:1" onclick="window.location.href=\'terms-of-service.html\'">Terms of Service</button>'
+    +'</div>');
+}
+
+/* \u2500\u2500 53. LOGOUT \u2500\u2500 */
+function doLogout(){
+  if(!confirm('Sign out of UNHCR.pi?'))return;
+  piUser=null;
+  try{localStorage.removeItem('unhcr_user');}catch(e){}
+  window.location='/';
+}
+
+/* \u2500\u2500 54. PI ECOSYSTEM INFO \u2500\u2500 */
+function openPiEcosystem(){
+  openP('&#x03C0; Pi Ecosystem',
+    '<div class="card card-blue"><div style="font-size:.62rem;font-weight:800;margin-bottom:.35rem">Pi Network</div>'
+    +'<div style="font-size:.52rem;color:rgba(240,246,255,.62);line-height:1.85">UNHCR is built for the Pi Browser. Pi SDK is used for authentication. Download the Pi Browser app to get started.</div></div>'
+    +'<div class="card"><div style="font-size:.52rem;color:rgba(240,246,255,.62);line-height:1.85">Pi Network: minepi.com<br>Pi Browser: Available in Pi app<br>Developer: develop.pi</div></div>');
+}
+</script>
+</body>
+</html>
