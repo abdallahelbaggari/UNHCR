@@ -364,7 +364,7 @@ window.addEventListener('load', function() {
       + '<img src="assets/icons/logo.svg" style="width:72px;height:72px;display:block;margin:0 auto 1.2rem;filter:drop-shadow(0 0 16px rgba(14,165,233,.4))">'
       + '<div style="font-size:1.4rem;font-weight:900;color:#F0F6FF;letter-spacing:.04em;margin-bottom:.5rem">UNHCR</div>'
       + '<div style="font-size:.65rem;color:rgba(240,246,255,.4);margin-bottom:1.8rem">Please sign in to continue</div>'
-      + '<button onclick="window.location.href=\'index.html\'" style="padding:.9rem 2.2rem;background:linear-gradient(135deg,#1a56db,#0ea5e9);border:none;border-radius:12px;color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;min-height:48px">Sign In with Pi</button>'
+      + '<button onclick="window.location.replace(\'index.html\')" style="padding:.9rem 2.2rem;background:linear-gradient(135deg,#1a56db,#0ea5e9);border:none;border-radius:12px;color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;min-height:48px">Sign In with Pi</button>'
       + '</div>';
     return;
   }
@@ -2017,7 +2017,7 @@ function doLogout(){
   if(!confirm('Sign out of UNHCR.pi?'))return;
   piUser=null;
   try{localStorage.removeItem('unhcr_user');}catch(e){}
-  window.location='/';
+  window.location.replace('/');
 }
 
 /* \u2500\u2500 54. PI ECOSYSTEM INFO \u2500\u2500 */
