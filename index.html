@@ -53,8 +53,8 @@ body{display:flex;align-items:center;justify-content:center;min-height:100vh;pad
 <script>
 /* ═══════════════════════════════════════════════════════
    UNHCR — index.html — MAINNET (sandbox:false)
-   Served at both / and /app via _redirects 200 rewrite
-   NEVER redirects back to /app — breaks all loops
+   Served at /
+   After login → app.html (never back to /app)
 ═══════════════════════════════════════════════════════ */
 
 var _ready = false;
@@ -75,22 +75,10 @@ function setLoading(on) {
     : 'Sign In with Pi';
 }
 
-/* ── Check existing session ── */
-(function checkSession() {
-  try {
-    var stored = localStorage.getItem('unhcr_user');
-    if (stored) {
-      var user = JSON.parse(stored);
-      if (user && user.username) {
-        /* Already logged in — go straight to app */
-        window.location.replace('app.html');
-        return;
-      }
-    }
-  } catch (e) {}
-  /* Not logged in — show login UI and init SDK */
-  initSDK();
-})();
+/* ── Init SDK immediately — no auto-redirect ── */
+/* User must always explicitly sign in or use guest mode */
+/* This prevents the session-restore redirect loop */
+initSDK();
 
 /* ── SDK Init ── */
 function initSDK() {
