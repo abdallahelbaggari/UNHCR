@@ -359,13 +359,16 @@ function saveEmergContacts(){try{localStorage.setItem('unhcr_emerg_contacts',JSO
 
 window.addEventListener('load', function() {
   if (!piUser) {
-    document.body.style.cssText = 'display:flex;align-items:center;justify-content:center;height:100vh;background:#091A3A;font-family:system-ui,sans-serif';
-    document.body.innerHTML = '<div style="text-align:center;padding:2rem">'
-      + '<img src="assets/icons/logo.svg" style="width:72px;height:72px;display:block;margin:0 auto 1.2rem;filter:drop-shadow(0 0 16px rgba(14,165,233,.4))">'
-      + '<div style="font-size:1.4rem;font-weight:900;color:#F0F6FF;letter-spacing:.04em;margin-bottom:.5rem">UNHCR</div>'
-      + '<div style="font-size:.65rem;color:rgba(240,246,255,.4);margin-bottom:1.8rem">Please sign in to continue</div>'
-      + '<button onclick="window.location.replace(\'index.html\')" style="padding:.9rem 2.2rem;background:linear-gradient(135deg,#1a56db,#0ea5e9);border:none;border-radius:12px;color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;min-height:48px">Sign In with Pi</button>'
-      + '</div>';
+    /* Inline login — zero redirects — breaks all loops */
+    document.body.style.cssText='display:flex;align-items:center;justify-content:center;height:100vh;background:#091A3A;font-family:system-ui,sans-serif;padding:2rem';
+    document.body.innerHTML='<div style="text-align:center;width:100%;max-width:320px">'
+      +'<img src="assets/icons/logo.svg" style="width:80px;height:80px;display:block;margin:0 auto 1rem;filter:drop-shadow(0 0 16px rgba(14,165,233,.4))">'
+      +'<div style="font-size:1.8rem;font-weight:900;color:#F0F6FF;letter-spacing:.06em;margin-bottom:1.6rem">UNHCR</div>'
+      +'<button id="_piBtn" onclick="_inlineSignIn()" style="width:100%;padding:1rem;background:linear-gradient(135deg,#1a56db,#0ea5e9);border:none;border-radius:14px;color:#fff;font-size:1rem;font-weight:800;min-height:56px;cursor:pointer;margin-bottom:.6rem;touch-action:manipulation">Sign In with Pi</button>'
+      +'<button onclick="_inlineGuest()" style="width:100%;padding:.8rem;background:rgba(255,255,255,.055);border:1.5px solid rgba(255,255,255,.09);border-radius:14px;color:rgba(240,246,255,.6);font-size:.9rem;font-weight:600;min-height:50px;cursor:pointer;touch-action:manipulation">Continue as Guest</button>'
+      +'<div id="_st" style="font-size:.55rem;color:rgba(240,246,255,.38);margin-top:.8rem;min-height:18px"></div>'
+      +'</div>';
+    if(typeof Pi!=='undefined'){try{Pi.init({version:'2.0',sandbox:false});}catch(e){}}
     return;
   }
 
@@ -2027,6 +2030,30 @@ function openPiEcosystem(){
     +'<div style="font-size:.52rem;color:rgba(240,246,255,.62);line-height:1.85">UNHCR is built for the Pi Browser. Pi SDK is used for authentication. Download the Pi Browser app to get started.</div></div>'
     +'<div class="card"><div style="font-size:.52rem;color:rgba(240,246,255,.62);line-height:1.85">Pi Network: minepi.com<br>Pi Browser: Available in Pi app<br>Developer: develop.pi</div></div>');
 }
+
+function _inlineSignIn() {
+  var btn = document.getElementById('_piBtn');
+  var st = document.getElementById('_st');
+  if(btn) btn.disabled = true;
+  if(st) st.textContent = 'Signing in...';
+  if(typeof Pi==='undefined'){if(st)st.textContent='Open in Pi Browser.';if(btn)btn.disabled=false;return;}
+  Pi.authenticate(['username'], function(p){
+    fetch('/complete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentId:p.identifier})}).catch(function(){});
+  }).then(function(auth){
+    if(!auth||!auth.user){if(btn)btn.disabled=false;if(st)st.textContent='Cancelled.';return;}
+    try{localStorage.setItem('unhcr_user',JSON.stringify(auth.user));}catch(e){}
+    if(st)st.textContent='Welcome, @'+auth.user.username+'!';
+    setTimeout(function(){window.location.reload();},500);
+  }).catch(function(e){
+    if(btn)btn.disabled=false;
+    if(st)st.textContent='Failed: '+(e&&e.message?e.message:'Try again.');
+  });
+}
+function _inlineGuest() {
+  try{localStorage.setItem('unhcr_user',JSON.stringify({username:'guest',isGuest:true}));}catch(e){}
+  window.location.reload();
+}
+
 </script>
 </body>
 </html>
