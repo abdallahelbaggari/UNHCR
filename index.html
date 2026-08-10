@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#091A3A">
 <title>UNHCR</title>
 <link rel="icon" type="image/svg+xml" href="assets/icons/logo.svg">
+<link rel="manifest" href="manifest.json">
 <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -13,7 +14,7 @@ html,body{height:100%;background:#091A3A;color:#F0F6FF;font-family:system-ui,-ap
 body{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem 1.5rem;background:radial-gradient(ellipse at 50% -10%,#0F2456 0%,#091A3A 68%)}
 .wrap{display:flex;flex-direction:column;align-items:center;width:100%;max-width:360px;animation:fadeUp .45s cubic-bezier(.22,1,.36,1)}
 .logo-wrap{position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:1.4rem}
-.logo-pulse{position:absolute;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(14,165,233,.08),transparent 70%);animation:pulse 3.5s ease-in-out infinite}
+.pulse{position:absolute;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(14,165,233,.08),transparent 70%);animation:pulse 3.5s ease-in-out infinite}
 .logo{width:92px;height:92px;display:block;filter:drop-shadow(0 0 28px rgba(14,165,233,.36))}
 .name{font-size:2.2rem;font-weight:900;letter-spacing:.06em;background:linear-gradient(160deg,#F0F6FF 30%,#7DD3FC);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;margin-bottom:1.8rem}
 .features{display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin-bottom:1.6rem;width:100%}
@@ -33,7 +34,7 @@ body{display:flex;align-items:center;justify-content:center;min-height:100vh;pad
 <body>
 <div class="wrap">
   <div class="logo-wrap">
-    <div class="logo-pulse"></div>
+    <div class="pulse"></div>
     <img class="logo" src="assets/icons/logo.svg" alt="UNHCR" loading="eager">
   </div>
   <div class="name">UNHCR</div>
@@ -50,9 +51,11 @@ body{display:flex;align-items:center;justify-content:center;min-height:100vh;pad
   <div class="status" id="status"></div>
 </div>
 <script>
-/* UNHCR — served at /app — MAINNET sandbox:false
-   This file is named "app" (no extension) so Cloudflare serves it at /app
-   Zero redirects. Zero loops. */
+/* ═══════════════════════════════════════════════════════
+   UNHCR — index.html — MAINNET (sandbox:false)
+   Served at both / and /app via _redirects 200 rewrite
+   NEVER redirects back to /app — breaks all loops
+═══════════════════════════════════════════════════════ */
 
 var _ready = false;
 
@@ -67,27 +70,32 @@ function setLoading(on) {
   var gb = document.getElementById('guestBtn');
   sb.disabled = on;
   gb.disabled = on;
-  sb.innerHTML = on ? '<span class="spinner"></span>Signing in...' : 'Sign In with Pi';
+  sb.innerHTML = on
+    ? '<span class="spinner"></span>Signing in...'
+    : 'Sign In with Pi';
 }
 
-/* Check existing session first */
+/* ── Check existing session ── */
 (function checkSession() {
   try {
     var stored = localStorage.getItem('unhcr_user');
     if (stored) {
       var user = JSON.parse(stored);
       if (user && user.username) {
+        /* Already logged in — go straight to app */
         window.location.replace('app.html');
         return;
       }
     }
-  } catch(e) {}
+  } catch (e) {}
+  /* Not logged in — show login UI and init SDK */
   initSDK();
 })();
 
+/* ── SDK Init ── */
 function initSDK() {
   if (typeof Pi === 'undefined') {
-    window.addEventListener('load', function() {
+    window.addEventListener('load', function () {
       if (typeof Pi === 'undefined') {
         setStatus('Open this app inside Pi Browser.', 'err');
         return;
@@ -103,51 +111,67 @@ function tryInit() {
   try {
     Pi.init({ version: '2.0', sandbox: false });
     _ready = true;
-  } catch(e) {
+  } catch (e) {
     setStatus('SDK error: ' + e.message, 'err');
   }
 }
 
+/* ── Sign In ── */
 function doSignIn() {
   if (!_ready) {
     try {
       Pi.init({ version: '2.0', sandbox: false });
       _ready = true;
-    } catch(e) {
+    } catch (e) {
       setStatus('Open this app inside Pi Browser.', 'err');
       return;
     }
   }
   setLoading(true);
   setStatus('');
+
   Pi.authenticate(
     ['username'],
+    /* onIncompletePaymentFound — plain function, no async */
     function onIncompletePaymentFound(payment) {
       fetch('/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ paymentId: payment.identifier })
-      }).catch(function() {});
+      }).catch(function () {});
     }
   )
-  .then(function(auth) {
+  .then(function (auth) {
     if (!auth || !auth.user) {
       setLoading(false);
       setStatus('Sign in was cancelled.', 'err');
       return;
     }
-    try { localStorage.setItem('unhcr_user', JSON.stringify(auth.user)); } catch(e) {}
+    try {
+      localStorage.setItem('unhcr_user', JSON.stringify(auth.user));
+    } catch (e) {}
     setStatus('Welcome, @' + auth.user.username + '!', 'ok');
-    setTimeout(function() { window.location.replace('app.html'); }, 500);
+    setTimeout(function () {
+      window.location.replace('app.html');
+    }, 500);
   })
-  .catch(function(err) {
+  .catch(function (err) {
     setLoading(false);
-    setStatus('Sign in failed: ' + (err && err.message ? err.message : 'Please try again.'), 'err');
+    setStatus(
+      'Sign in failed: ' + (err && err.message ? err.message : 'Please try again.'),
+      'err'
+    );
   });
 }
 
+/* ── Guest Mode ── */
 function doGuest() {
-  try { localStorage.setItem('unhcr_user', JSON.stringify({ username: 'guest', isGuest: true })); } catch(e) {}
+  try {
+    localStorage.setItem(
+      'unhcr_user',
+      JSON.stringify({ username: 'guest', isGuest: true })
+    );
+  } catch (e) {}
   window.location.replace('app.html');
 }
 </script>
