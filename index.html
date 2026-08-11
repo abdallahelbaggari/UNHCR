@@ -1147,32 +1147,100 @@ function onIncompletePayment(payment) {
   }).catch(function() {});
 }
 
-function piLogin() {
-  var btn = document.getElementById('loginBtn');
-  if (btn) { btn.disabled = true; }
-  setMsg('Connecting to Pi Network...');
 
-  if (typeof Pi === 'undefined') {
-    /* Outside Pi Browser — demo/guest mode */
-    piUser = { username: 'Pioneer' };
-    try { localStorage.setItem('unhcr_user', JSON.stringify(piUser)); } catch(e) {}
-    launchApp();
-    return;
+/* ════════════════════════════════════════════════
+   COPA PATTERN — exact replica
+   Pi.init() called inside piLogin()
+   No _ready flag. No disabled state before click.
+   Auto-called on window load.
+════════════════════════════════════════════════ */
+
+var _APPROVE = '/approve';
+var _COMPLETE = '/complete';
+var _CANCEL = '/cancel-payment';
+
+function setMsg(msg, type) {
+  var el = document.getElementById('lmsg');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'login-msg' + (type ? ' ' + type : '');
+}
+
+function onIncompletePayment(payment) {
+  if (!payment) return;
+  var txid = '';
+  try { txid = (payment.transaction && payment.transaction.txid) ? payment.transaction.txid : ''; } catch(e) {}
+  var pid = payment.identifier;
+  if (txid) {
+    fetch(_COMPLETE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paymentId: pid, txid: txid })
+    }).catch(function() {});
+  } else {
+    fetch(_CANCEL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paymentId: pid })
+    }).catch(function() {});
   }
+}
 
+function hideSplash() {
+  var s = document.getElementById('login');
+  if (s) {
+    s.style.opacity = '0';
+    s.style.transition = 'opacity .3s';
+    setTimeout(function() { s.style.display = 'none'; }, 300);
+  }
+}
+
+function piLogin() {
+  /* COPA PATTERN: Pi.init inside piLogin, called on every login attempt */
   Pi.init({ version: '2.0', sandbox: false });
+  setMsg('Connecting...');
+
   Pi.authenticate(['username'], onIncompletePayment)
     .then(function(auth) {
       piUser = auth.user;
       try { localStorage.setItem('unhcr_user', JSON.stringify(piUser)); } catch(e) {}
       setMsg('Welcome, @' + piUser.username + '!', 'ok');
-      setTimeout(launchApp, 400);
+      setTimeout(function() { hideSplash(); launchApp(); }, 400);
     })
-    .catch(function(err) {
+    .catch(function(e) {
+      setMsg('Sign in failed. Tap to try again.', 'err');
+      var btn = document.getElementById('loginBtn');
       if (btn) btn.disabled = false;
-      setMsg('Sign in failed. Please try again.', 'err');
     });
 }
+
+function guestLogin() {
+  piUser = { username: 'guest', isGuest: true };
+  try { localStorage.setItem('unhcr_user', JSON.stringify(piUser)); } catch(e) {}
+  hideSplash();
+  launchApp();
+}
+
+/* COPA BOOT — window load, check window.Pi, call piLogin directly */
+window.addEventListener('load', function() {
+  /* Restore session */
+  try {
+    var s = localStorage.getItem('unhcr_user');
+    if (s) piUser = JSON.parse(s);
+  } catch(e) {}
+
+  if (piUser && piUser.username) {
+    /* Session exists — go straight to app */
+    hideSplash();
+    launchApp();
+  } else if (window.Pi) {
+    /* Pi Browser — auto-trigger login */
+    piLogin();
+  } else {
+    /* Not Pi Browser — show login screen, wait for tap */
+    setMsg('Open in Pi Browser to sign in.');
+  }
+});
 
 function guestLogin() {
   piUser = { username: 'guest', isGuest: true };
@@ -1207,15 +1275,6 @@ function launchLogin() {
 }
 
 /* Boot — Copa pattern: auto-call piLogin on load */
-window.addEventListener('load', function() {
-  if (piUser && piUser.username) {
-    /* Already have session — go straight to app */
-    launchApp();
-  } else {
-    /* No session — show login and auto-trigger Pi auth */
-    piLogin();
-  }
-});
 
 
 /* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
