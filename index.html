@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#091A3A">
 <meta name="description" content="UNHCR — Humanitarian Digital Platform">
 <meta property="og:title" content="UNHCR">
@@ -14,6 +14,7 @@
 <link rel="manifest" href="manifest.json">
 <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 <style>
+
 
 
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -398,28 +399,84 @@ select.inp option{background:#0d1e38;color:#F0F6FF}
 .hc-strip{display:flex;gap:.32rem;padding:0 1rem .4rem;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .hc-strip::-webkit-scrollbar{display:none}
 
+
+/* ═══ COPA-STYLE SPLASH/LOGIN ═══ */
+#splash{
+  position:fixed;inset:0;background:#091A3A;z-index:999;
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:2rem 1.5rem;
+  background:radial-gradient(ellipse at 50% -10%,#0F2456 0%,#091A3A 68%);
+}
+#splash .s-logo{
+  width:88px;height:88px;display:block;margin:0 auto 1.2rem;
+  filter:drop-shadow(0 0 24px rgba(14,165,233,.4));
+  animation:s-pulse 3s ease-in-out infinite;
+}
+@keyframes s-pulse{0%,100%{filter:drop-shadow(0 0 18px rgba(14,165,233,.3))}50%{filter:drop-shadow(0 0 32px rgba(14,165,233,.55))}}
+#splash .s-name{
+  font-size:2.2rem;font-weight:900;letter-spacing:.06em;
+  background:linear-gradient(160deg,#F0F6FF 30%,#7DD3FC);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;line-height:1;margin-bottom:1.6rem;
+}
+#splash .s-feats{
+  display:grid;grid-template-columns:1fr 1fr;gap:.38rem;
+  margin-bottom:1.5rem;width:100%;max-width:340px;
+}
+#splash .s-feat{
+  background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.07);
+  border-radius:11px;padding:.5rem .58rem;font-size:.54rem;font-weight:600;
+  color:rgba(240,246,255,.55);display:flex;align-items:center;gap:.32rem;
+}
+#splash .s-spin{
+  width:28px;height:28px;border:3px solid rgba(255,255,255,.1);
+  border-top-color:#0ea5e9;border-radius:50%;
+  animation:spin .8s linear infinite;margin-bottom:.6rem;
+}
+#splash .s-btn{
+  width:100%;max-width:340px;padding:1rem;
+  background:linear-gradient(135deg,#1a56db,#0ea5e9);
+  border:none;border-radius:14px;color:#fff;font-size:1rem;font-weight:800;
+  min-height:56px;cursor:pointer;touch-action:manipulation;
+  box-shadow:0 8px 28px rgba(14,165,233,.32);margin-bottom:.5rem;
+  display:none;
+}
+#splash .s-guest{
+  width:100%;max-width:340px;padding:.8rem;
+  background:rgba(255,255,255,.055);border:1.5px solid rgba(255,255,255,.09);
+  border-radius:14px;color:rgba(240,246,255,.6);font-size:.9rem;font-weight:600;
+  min-height:50px;cursor:pointer;touch-action:manipulation;
+  display:none;
+}
+#splash .s-msg{
+  font-size:.54rem;color:rgba(240,246,255,.4);margin-top:.7rem;
+  min-height:18px;text-align:center;line-height:1.6;max-width:300px;
+}
+#splash .s-msg.err{color:#fca5a5}
+#splash .s-msg.ok{color:#10b981}
+
 </style>
 </head>
 <body>
 
-<div id="login">
-  <div class="login-logo-wrap">
-    <div class="login-pulse"></div>
-    <img class="login-logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIiBmaWxsPSJub25lIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0ic2hpZWxkR3JhZCIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMUU0MEFGIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzBFQTVFOSIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iYXJjR3JhZCIgeDE9IjAiIHkxPSIxIiB4Mj0iMSIgeTI9IjAiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMzhCREY4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzdERDNGQyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iaGFuZEdyYWQiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI0ZGRkZGRiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNCQUU2RkQiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8ZmlsdGVyIGlkPSJnbG93Ij4KICAgICAgPGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iMyIgcmVzdWx0PSJibHVyIi8+CiAgICAgIDxmZUNvbXBvc2l0ZSBpbj0iU291cmNlR3JhcGhpYyIgaW4yPSJibHVyIiBvcGVyYXRvcj0ib3ZlciIvPgogICAgPC9maWx0ZXI+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9ImJnR3JhZCIgY3g9IjUwJSIgY3k9IjUwJSIgcj0iNTAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzBGMjQ1NiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwOTFBM0EiLz4KICAgIDwvcmFkaWFsR3JhZGllbnQ+CiAgPC9kZWZzPgoKICA8IS0tIEJhY2tncm91bmQgY2lyY2xlIC0tPgogIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ1cmwoI2JnR3JhZCkiLz4KCiAgPCEtLSBTdWJ0bGUgcmluZyAtLT4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9Ijg4IiBzdHJva2U9InJnYmEoMTQsMTY1LDIzMywwLjEyKSIgc3Ryb2tlLXdpZHRoPSIxLjUiIGZpbGw9Im5vbmUiLz4KCiAgPCEtLSBTaGllbGQgYm9keSAtLT4KICA8cGF0aCBkPSJNMTAwIDMwIEwxNDggNTAgTDE0OCAxMDAgQzE0OCAxMjggMTI2IDE0OCAxMDAgMTU4IEM3NCAxNDggNTIgMTI4IDUyIDEwMCBMNTIgNTAgWiIKICAgICAgICBmaWxsPSJ1cmwoI3NoaWVsZEdyYWQpIiBvcGFjaXR5PSIwLjk1Ii8+CgogIDwhLS0gU2hpZWxkIGlubmVyIGhpZ2hsaWdodCAtLT4KICA8cGF0aCBkPSJNMTAwIDM4IEwxNDAgNTUgTDE0MCAxMDAgQzE0MCAxMjQgMTIyIDE0MSAxMDAgMTUwIEM3OCAxNDEgNjAgMTI0IDYwIDEwMCBMNjAgNTUgWiIKICAgICAgICBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4xMikiIHN0cm9rZS13aWR0aD0iMS4yIi8+CgogIDwhLS0gUmlzaW5nIGFyYyAoaG9wZSAvIGRhd24pIC0tPgogIDxwYXRoIGQ9Ik03MiAxMDggQTMyIDMyIDAgMCAxIDEyOCAxMDgiCiAgICAgICAgc3Ryb2tlPSJ1cmwoI2FyY0dyYWQpIiBzdHJva2Utd2lkdGg9IjQuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBmaWxsPSJub25lIiBmaWx0ZXI9InVybCgjZ2xvdykiLz4KCiAgPCEtLSBTbWFsbCBhcmMgcmF5cyBzdWdnZXN0aW5nIGEgc3VucmlzZSAtLT4KICA8bGluZSB4MT0iMTAwIiB5MT0iNzEiIHgyPSIxMDAiIHkyPSI2NCIgc3Ryb2tlPSIjN0REM0ZDIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC45Ii8+CiAgPGxpbmUgeDE9IjExNCIgeTE9Ijc0IiB4Mj0iMTE4IiB5Mj0iNjgiIHN0cm9rZT0iIzdERDNGQyIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC43NSIvPgogIDxsaW5lIHgxPSI4NiIgeTE9Ijc0IiB4Mj0iODIiIHkyPSI2OCIgc3Ryb2tlPSIjN0REM0ZDIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBvcGFjaXR5PSIwLjc1Ii8+CiAgPGxpbmUgeDE9IjEyNCIgeTE9IjgyIiB4Mj0iMTI5IiB5Mj0iNzciIHN0cm9rZT0iIzdERDNGQyIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIG9wYWNpdHk9IjAuNSIvPgogIDxsaW5lIHgxPSI3NiIgeTE9IjgyIiB4Mj0iNzEiIHkyPSI3NyIgc3Ryb2tlPSIjN0REM0ZDIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC41Ii8+CgogIDwhLS0gT3BlbiB1cHR1cm5lZCBoYW5kIChwcm90ZWN0aW9uIC8gZ2l2aW5nKSAtLT4KICA8IS0tIFBhbG0gYmFzZSAtLT4KICA8cGF0aCBkPSJNODQgMTIwIFE4NCAxMTUgODggMTEzIEw4OCAxMDMgUTg4IDEwMCA5MSAxMDAgUTk0IDEwMCA5NCAxMDMgTDk0IDExMAogICAgICAgICAgIEw5NCAxMDEgUTk0IDk4IDk3IDk4IFExMDAgOTggMTAwIDEwMSBMMTAwIDExMAogICAgICAgICAgIEwxMDAgMTAyIFExMDAgOTkgMTAzIDk5IFExMDYgOTkgMTA2IDEwMiBMMTA2IDExMAogICAgICAgICAgIEwxMDYgMTA0IFExMDYgMTAxLjUgMTA4LjUgMTAxLjUgUTExMSAxMDEuNSAxMTEgMTA0IEwxMTEgMTE0CiAgICAgICAgICAgUTExNCAxMTUgMTE2IDEyMCBRMTE2IDEyOCAxMDAgMTMwIFE4NCAxMjggODQgMTIwIFoiCiAgICAgICAgZmlsbD0idXJsKCNoYW5kR3JhZCkiIG9wYWNpdHk9IjAuOTUiLz4KCiAgPCEtLSBTdWJ0bGUgaGFuZCBzaGFkaW5nIC0tPgogIDxwYXRoIGQ9Ik05NCAxMTAgTDk0IDEwMyIgc3Ryb2tlPSJyZ2JhKDE0LDE2NSwyMzMsMC4yNSkiIHN0cm9rZS13aWR0aD0iMC44Ii8+CiAgPHBhdGggZD0iTTEwMCAxMTAgTDEwMCAxMDEiIHN0cm9rZT0icmdiYSgxNCwxNjUsMjMzLDAuMjUpIiBzdHJva2Utd2lkdGg9IjAuOCIvPgogIDxwYXRoIGQ9Ik0xMDYgMTEwIEwxMDYgMTAyIiBzdHJva2U9InJnYmEoMTQsMTY1LDIzMywwLjI1KSIgc3Ryb2tlLXdpZHRoPSIwLjgiLz4KCiAgPCEtLSBUaHJlZSBzbWFsbCBwZW9wbGUvZmlndXJlcyBhYm92ZSBoYW5kIHN1Z2dlc3RpbmcgY29tbXVuaXR5IC0tPgogIDxjaXJjbGUgY3g9IjkyIiBjeT0iOTYiIHI9IjMuNSIgZmlsbD0iIzM4QkRGOCIgb3BhY2l0eT0iMC44Ii8+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iOTQiIHI9IjMuNSIgZmlsbD0iIzdERDNGQyIgb3BhY2l0eT0iMC45Ii8+CiAgPGNpcmNsZSBjeD0iMTA4IiBjeT0iOTYiIHI9IjMuNSIgZmlsbD0iIzM4QkRGOCIgb3BhY2l0eT0iMC44Ii8+Cjwvc3ZnPgo=" alt="UNHCR" loading="eager">
+<!-- ══ SPLASH / LOGIN — Copa style: fixed overlay, z-index 999 ══ -->
+<div id="splash">
+  <img class="s-logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIiBmaWxsPSJub25lIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0ic2hpZWxkR3JhZCIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMUU0MEFGIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzBFQTVFOSIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iYXJjR3JhZCIgeDE9IjAiIHkxPSIxIiB4Mj0iMSIgeTI9IjAiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMzhCREY4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzdERDNGQyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iaGFuZEdyYWQiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI0ZGRkZGRiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNCQUU2RkQiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8ZmlsdGVyIGlkPSJnbG93Ij4KICAgICAgPGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iMyIgcmVzdWx0PSJibHVyIi8+CiAgICAgIDxmZUNvbXBvc2l0ZSBpbj0iU291cmNlR3JhcGhpYyIgaW4yPSJibHVyIiBvcGVyYXRvcj0ib3ZlciIvPgogICAgPC9maWx0ZXI+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9ImJnR3JhZCIgY3g9IjUwJSIgY3k9IjUwJSIgcj0iNTAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzBGMjQ1NiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwOTFBM0EiLz4KICAgIDwvcmFkaWFsR3JhZGllbnQ+CiAgPC9kZWZzPgoKICA8IS0tIEJhY2tncm91bmQgY2lyY2xlIC0tPgogIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ1cmwoI2JnR3JhZCkiLz4KCiAgPCEtLSBTdWJ0bGUgcmluZyAtLT4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9Ijg4IiBzdHJva2U9InJnYmEoMTQsMTY1LDIzMywwLjEyKSIgc3Ryb2tlLXdpZHRoPSIxLjUiIGZpbGw9Im5vbmUiLz4KCiAgPCEtLSBTaGllbGQgYm9keSAtLT4KICA8cGF0aCBkPSJNMTAwIDMwIEwxNDggNTAgTDE0OCAxMDAgQzE0OCAxMjggMTI2IDE0OCAxMDAgMTU4IEM3NCAxNDggNTIgMTI4IDUyIDEwMCBMNTIgNTAgWiIKICAgICAgICBmaWxsPSJ1cmwoI3NoaWVsZEdyYWQpIiBvcGFjaXR5PSIwLjk1Ii8+CgogIDwhLS0gU2hpZWxkIGlubmVyIGhpZ2hsaWdodCAtLT4KICA8cGF0aCBkPSJNMTAwIDM4IEwxNDAgNTUgTDE0MCAxMDAgQzE0MCAxMjQgMTIyIDE0MSAxMDAgMTUwIEM3OCAxNDEgNjAgMTI0IDYwIDEwMCBMNjAgNTUgWiIKICAgICAgICBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4xMikiIHN0cm9rZS13aWR0aD0iMS4yIi8+CgogIDwhLS0gUmlzaW5nIGFyYyAoaG9wZSAvIGRhd24pIC0tPgogIDxwYXRoIGQ9Ik03MiAxMDggQTMyIDMyIDAgMCAxIDEyOCAxMDgiCiAgICAgICAgc3Ryb2tlPSJ1cmwoI2FyY0dyYWQpIiBzdHJva2Utd2lkdGg9IjQuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBmaWxsPSJub25lIiBmaWx0ZXI9InVybCgjZ2xvdykiLz4KCiAgPCEtLSBTbWFsbCBhcmMgcmF5cyBzdWdnZXN0aW5nIGEgc3VucmlzZSAtLT4KICA8bGluZSB4MT0iMTAwIiB5MT0iNzEiIHgyPSIxMDAiIHkyPSI2NCIgc3Ryb2tlPSIjN0REM0ZDIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC45Ii8+CiAgPGxpbmUgeDE9IjExNCIgeTE9Ijc0IiB4Mj0iMTE4IiB5Mj0iNjgiIHN0cm9rZT0iIzdERDNGQyIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC43NSIvPgogIDxsaW5lIHgxPSI4NiIgeTE9Ijc0IiB4Mj0iODIiIHkyPSI2OCIgc3Ryb2tlPSIjN0REM0ZDIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBvcGFjaXR5PSIwLjc1Ii8+CiAgPGxpbmUgeDE9IjEyNCIgeTE9IjgyIiB4Mj0iMTI5IiB5Mj0iNzciIHN0cm9rZT0iIzdERDNGQyIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIG9wYWNpdHk9IjAuNSIvPgogIDxsaW5lIHgxPSI3NiIgeTE9IjgyIiB4Mj0iNzEiIHkyPSI3NyIgc3Ryb2tlPSIjN0REM0ZDIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC41Ii8+CgogIDwhLS0gT3BlbiB1cHR1cm5lZCBoYW5kIChwcm90ZWN0aW9uIC8gZ2l2aW5nKSAtLT4KICA8IS0tIFBhbG0gYmFzZSAtLT4KICA8cGF0aCBkPSJNODQgMTIwIFE4NCAxMTUgODggMTEzIEw4OCAxMDMgUTg4IDEwMCA5MSAxMDAgUTk0IDEwMCA5NCAxMDMgTDk0IDExMAogICAgICAgICAgIEw5NCAxMDEgUTk0IDk4IDk3IDk4IFExMDAgOTggMTAwIDEwMSBMMTAwIDExMAogICAgICAgICAgIEwxMDAgMTAyIFExMDAgOTkgMTAzIDk5IFExMDYgOTkgMTA2IDEwMiBMMTA2IDExMAogICAgICAgICAgIEwxMDYgMTA0IFExMDYgMTAxLjUgMTA4LjUgMTAxLjUgUTExMSAxMDEuNSAxMTEgMTA0IEwxMTEgMTE0CiAgICAgICAgICAgUTExNCAxMTUgMTE2IDEyMCBRMTE2IDEyOCAxMDAgMTMwIFE4NCAxMjggODQgMTIwIFoiCiAgICAgICAgZmlsbD0idXJsKCNoYW5kR3JhZCkiIG9wYWNpdHk9IjAuOTUiLz4KCiAgPCEtLSBTdWJ0bGUgaGFuZCBzaGFkaW5nIC0tPgogIDxwYXRoIGQ9Ik05NCAxMTAgTDk0IDEwMyIgc3Ryb2tlPSJyZ2JhKDE0LDE2NSwyMzMsMC4yNSkiIHN0cm9rZS13aWR0aD0iMC44Ii8+CiAgPHBhdGggZD0iTTEwMCAxMTAgTDEwMCAxMDEiIHN0cm9rZT0icmdiYSgxNCwxNjUsMjMzLDAuMjUpIiBzdHJva2Utd2lkdGg9IjAuOCIvPgogIDxwYXRoIGQ9Ik0xMDYgMTEwIEwxMDYgMTAyIiBzdHJva2U9InJnYmEoMTQsMTY1LDIzMywwLjI1KSIgc3Ryb2tlLXdpZHRoPSIwLjgiLz4KCiAgPCEtLSBUaHJlZSBzbWFsbCBwZW9wbGUvZmlndXJlcyBhYm92ZSBoYW5kIHN1Z2dlc3RpbmcgY29tbXVuaXR5IC0tPgogIDxjaXJjbGUgY3g9IjkyIiBjeT0iOTYiIHI9IjMuNSIgZmlsbD0iIzM4QkRGOCIgb3BhY2l0eT0iMC44Ii8+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iOTQiIHI9IjMuNSIgZmlsbD0iIzdERDNGQyIgb3BhY2l0eT0iMC45Ii8+CiAgPGNpcmNsZSBjeD0iMTA4IiBjeT0iOTYiIHI9IjMuNSIgZmlsbD0iIzM4QkRGOCIgb3BhY2l0eT0iMC44Ii8+Cjwvc3ZnPgo=" alt="UNHCR">
+  <div class="s-name">UNHCR</div>
+  <div class="s-feats">
+    <div class="s-feat">&#x1F6A8; Emergency</div>
+    <div class="s-feat">&#x1FA7A; Healthcare</div>
+    <div class="s-feat">&#x1F3E0; Shelter</div>
+    <div class="s-feat">&#x2696;&#xFE0F; Legal Aid</div>
+    <div class="s-feat">&#x1F4DA; Education</div>
+    <div class="s-feat">&#x1F4B0; Pi Wallet</div>
   </div>
-  <div class="login-name">UNHCR</div>
-  <div class="login-feats">
-    <div class="login-feat">&#x1F6A8; Emergency</div>
-    <div class="login-feat">&#x1FA7A; Healthcare</div>
-    <div class="login-feat">&#x1F3E0; Shelter</div>
-    <div class="login-feat">&#x2696;&#xFE0F; Legal Aid</div>
-    <div class="login-feat">&#x1F4DA; Education</div>
-    <div class="login-feat">&#x1F4B0; Pi Wallet</div>
-  </div>
-  <button class="login-btn" id="loginBtn" onclick="piLogin()">Sign In with Pi</button>
-  <button class="login-guest" id="guestBtn" onclick="guestLogin()">Continue as Guest</button>
-  <div class="login-msg" id="lmsg"></div>
+  <div class="s-spin" id="s-spin"></div>
+  <button class="s-btn" id="s-signin" onclick="piLogin()">Sign In with Pi</button>
+  <button class="s-guest" id="s-guest" onclick="guestLogin()">Continue as Guest</button>
+  <div class="s-msg" id="s-msg"></div>
 </div>
+
 <div id="app" style="display:none;flex-direction:column;height:100vh;overflow:hidden">
   <div id="hdr">
     <div class="brand" style="display:flex;align-items:center;gap:.35rem">
@@ -473,8 +530,127 @@ select.inp option{background:#0d1e38;color:#F0F6FF}
   </div>
 </div>
 <div id="toast"></div>
-
 <script>
+/* ══ KILL OLD SERVICE WORKER + REGISTER NEW ══ */
+if ('serviceWorker' in navigator) {
+  /* First: unregister ALL existing service workers to clear old cache */
+  navigator.serviceWorker.getRegistrations().then(function(regs) {
+    regs.forEach(function(reg) { reg.unregister(); });
+  });
+  /* Then: clear all caches */
+  if ('caches' in window) {
+    caches.keys().then(function(keys) {
+      keys.forEach(function(k) { caches.delete(k); });
+    });
+  }
+  /* Then register fresh SW after short delay */
+  setTimeout(function() {
+    navigator.serviceWorker.register('sw.js').catch(function() {});
+  }, 1000);
+}
+
+
+/* ════════════════════════════════════════════
+   COPA EXACT PATTERN — UNHCR Mainnet
+   Pi.init() inside piLogin()
+   Splash overlay hides after auth
+   window.Pi check (not typeof Pi)
+════════════════════════════════════════════ */
+
+var _APPROVE  = '/approve';
+var _COMPLETE = '/complete';
+var _CANCEL   = '/cancel-payment';
+
+function setMsg(msg, type) {
+  var el = document.getElementById('s-msg');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 's-msg' + (type ? ' ' + type : '');
+}
+
+function showLoginBtns() {
+  var sb = document.getElementById('s-signin');
+  var gb = document.getElementById('s-guest');
+  var sp = document.getElementById('s-spin');
+  if (sb) sb.style.display = 'block';
+  if (gb) gb.style.display = 'block';
+  if (sp) sp.style.display = 'none';
+}
+
+function hideSplash() {
+  var s = document.getElementById('splash');
+  if (!s) return;
+  s.style.opacity = '0';
+  s.style.transition = 'opacity .3s';
+  setTimeout(function() { s.style.display = 'none'; }, 320);
+}
+
+function onIncompletePayment(payment) {
+  if(!payment) return;
+  var txid='';
+  try{txid=(payment.transaction&&payment.transaction.txid)?payment.transaction.txid:'';}catch(e){}
+  var pid=payment.identifier;
+  if(txid){
+    fetch(_COMPLETE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentId:pid,txid:txid})})
+      .then(function(r){return r.json();})
+      .catch(function(){});
+  } else {
+    fetch(_CANCEL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentId:pid})})
+      .catch(function(){});
+  }
+}
+
+function piLogin() {
+  Pi.init({version:'2.0', sandbox:false}); /* MAINNET — exact Copa pattern */
+  setMsg('Connecting...');
+  Pi.authenticate(['username','payments'], onIncompletePayment)
+    .then(function(auth){
+      piUser = auth.user;
+      try{localStorage.setItem('unhcr_user', JSON.stringify(piUser));}catch(e){}
+      setMsg('Welcome, @'+piUser.username+'!', 'ok');
+      setTimeout(function(){ hideSplash(); launchApp(); }, 500);
+    })
+    .catch(function(e){
+      setMsg('Sign in failed. Tap to try again.', 'err');
+      var sb=document.getElementById('s-signin');
+      var gb=document.getElementById('s-guest');
+      if(sb){sb.disabled=false;sb.style.display='block';}
+      if(gb){gb.disabled=false;gb.style.display='block';}
+    });
+}
+function guestLogin() {
+  piUser = { username: 'guest', isGuest: true };
+  try { localStorage.setItem('unhcr_user', JSON.stringify(piUser)); } catch(e) {}
+  hideSplash();
+  launchApp();
+}
+
+/* ══ COPA BOOT — window load, window.Pi check ══ */
+window.addEventListener('load', function() {
+  /* Restore existing session */
+  try {
+    var stored = localStorage.getItem('unhcr_user');
+    if (stored) piUser = JSON.parse(stored);
+  } catch(e) {}
+
+  if (piUser && piUser.username) {
+    /* Already logged in — skip splash */
+    hideSplash();
+    launchApp();
+    return;
+  }
+
+  if (window.Pi) {
+    /* Inside Pi Browser — auto-trigger login */
+    piLogin();
+  } else {
+    /* Outside Pi Browser — show buttons for manual tap */
+    setMsg('Open in Pi Browser to sign in with Pi.');
+    showLoginBtns();
+  }
+});
+
+
 function renderHome(){
   var name=piUser&&piUser.username?piUser.username:'Pioneer';
   var h=new Date().getHours();
@@ -1122,7 +1298,7 @@ function getLastUpdated() {
 ═══════════════════════════════════════════════════ */
 
 var piUser = null;
-var _COMPLETE = '/complete';
+
 
 /* Load user from storage */
 try {
@@ -1130,123 +1306,14 @@ try {
   if (_s) piUser = JSON.parse(_s);
 } catch(e) {}
 
-function setMsg(msg, type) {
-  var el = document.getElementById('lmsg');
-  if (!el) return;
-  el.textContent = msg;
-  el.className = 'login-msg' + (type ? ' ' + type : '');
-}
-
-function onIncompletePayment(payment) {
-  if (!payment) return;
-  var pid = payment.identifier;
-  fetch(_COMPLETE, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ paymentId: pid })
-  }).catch(function() {});
-}
 
 
-/* ════════════════════════════════════════════════
-   COPA PATTERN — exact replica
-   Pi.init() called inside piLogin()
-   No _ready flag. No disabled state before click.
-   Auto-called on window load.
-════════════════════════════════════════════════ */
 
-var _APPROVE = '/approve';
-var _COMPLETE = '/complete';
-var _CANCEL = '/cancel-payment';
 
-function setMsg(msg, type) {
-  var el = document.getElementById('lmsg');
-  if (!el) return;
-  el.textContent = msg;
-  el.className = 'login-msg' + (type ? ' ' + type : '');
-}
 
-function onIncompletePayment(payment) {
-  if (!payment) return;
-  var txid = '';
-  try { txid = (payment.transaction && payment.transaction.txid) ? payment.transaction.txid : ''; } catch(e) {}
-  var pid = payment.identifier;
-  if (txid) {
-    fetch(_COMPLETE, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paymentId: pid, txid: txid })
-    }).catch(function() {});
-  } else {
-    fetch(_CANCEL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paymentId: pid })
-    }).catch(function() {});
-  }
-}
 
-function hideSplash() {
-  var s = document.getElementById('login');
-  if (s) {
-    s.style.opacity = '0';
-    s.style.transition = 'opacity .3s';
-    setTimeout(function() { s.style.display = 'none'; }, 300);
-  }
-}
 
-function piLogin() {
-  /* COPA PATTERN: Pi.init inside piLogin, called on every login attempt */
-  Pi.init({ version: '2.0', sandbox: false });
-  setMsg('Connecting...');
 
-  Pi.authenticate(['username'], onIncompletePayment)
-    .then(function(auth) {
-      piUser = auth.user;
-      try { localStorage.setItem('unhcr_user', JSON.stringify(piUser)); } catch(e) {}
-      setMsg('Welcome, @' + piUser.username + '!', 'ok');
-      setTimeout(function() { hideSplash(); launchApp(); }, 400);
-    })
-    .catch(function(e) {
-      setMsg('Sign in failed. Tap to try again.', 'err');
-      var btn = document.getElementById('loginBtn');
-      if (btn) btn.disabled = false;
-    });
-}
-
-function guestLogin() {
-  piUser = { username: 'guest', isGuest: true };
-  try { localStorage.setItem('unhcr_user', JSON.stringify(piUser)); } catch(e) {}
-  hideSplash();
-  launchApp();
-}
-
-/* COPA BOOT — window load, check window.Pi, call piLogin directly */
-window.addEventListener('load', function() {
-  /* Restore session */
-  try {
-    var s = localStorage.getItem('unhcr_user');
-    if (s) piUser = JSON.parse(s);
-  } catch(e) {}
-
-  if (piUser && piUser.username) {
-    /* Session exists — go straight to app */
-    hideSplash();
-    launchApp();
-  } else if (window.Pi) {
-    /* Pi Browser — auto-trigger login */
-    piLogin();
-  } else {
-    /* Not Pi Browser — show login screen, wait for tap */
-    setMsg('Open in Pi Browser to sign in.');
-  }
-});
-
-function guestLogin() {
-  piUser = { username: 'guest', isGuest: true };
-  try { localStorage.setItem('unhcr_user', JSON.stringify(piUser)); } catch(e) {}
-  launchApp();
-}
 
 function launchApp() {
   var loginEl=document.getElementById('login');
@@ -1722,26 +1789,7 @@ function openHealthcare(){
       +'Befrienders (Global): befrienders.org'
     +'</div></div>');
 }
-function openHospitalFinder(){openP('&#x1F3E5; Hospital Finder','<div class="map-ph" onclick="openServicesFinder()"><div class="map-ph-i">&#x1F5FA;</div><div class="map-ph-t">Find Nearest Hospital</div><div class="map-ph-s">Use Services Finder to locate hospitals</div></div>'+openServicesFinder_html());}
-function openClinicFinder(){openP('&#x1FA7A; Clinic Finder','<div class="map-ph" onclick="openServicesFinder()"><div class="map-ph-i">&#x1F5FA;</div><div class="map-ph-t">Find Nearest Clinic</div><div class="map-ph-s">Use Services Finder to locate clinics</div></div>'+openServicesFinder_html());}
-function openServicesFinder_html(){return '<button class="btn-p" onclick="openServicesFinder()">&#x1F4CD; Open Services Finder</button>';}
 
-/* \u2500\u2500 13. MENTAL HEALTH \u2500\u2500 */
-function openMentalHealth(){
-  openP('&#x1F9E0; Mental Health Support',
-    '<div class="card card-blue"><div style="font-size:.62rem;font-weight:800;margin-bottom:.35rem">&#x1F499; You Are Not Alone</div>'
-    +'<div style="font-size:.52rem;color:rgba(240,246,255,.58);line-height:1.85">Mental health is as important as physical health. Reaching out for help is a sign of strength, not weakness.</div></div>'
-    +'<div class="card"><div style="font-size:.62rem;font-weight:800;margin-bottom:.38rem">24/7 Support Lines</div>'
-    +'<div style="font-size:.52rem;color:rgba(240,246,255,.65);line-height:2.05">'
-      +'&#x1F4DE; Crisis Text (US): Text HOME to 741741<br>'
-      +'&#x1F4DE; Samaritans (UK/IE): 116 123<br>'
-      +'&#x1F4DE; Lifeline (AU): 13 11 14<br>'
-      +'&#x1F4DE; iCall (India): 9152987821<br>'
-      +'&#x1F4DE; Befrienders (Global): befrienders.org<br>'
-      +'&#x1F4DE; Crisis Services Canada: 1-833-456-4566'
-    +'</div></div>'
-    +'<div class="card card-green"><div style="font-size:.52rem;color:rgba(240,246,255,.58);line-height:1.85">For displaced persons experiencing trauma, UNHCR offers psychosocial support in many field locations. Visit unhcr.org to find support near you.</div></div>');
-}
 
 /* \u2500\u2500 14. DISEASE PREVENTION \u2500\u2500 */
 function openDiseasePrev(){
@@ -2814,6 +2862,7 @@ function submitPiPayment(amount, memo) {
 function escHtml(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
+
 
 
 
