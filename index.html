@@ -1886,6 +1886,9 @@ select.inp option{background:#0d1e38;color:#F0F6FF}
   <div class="tagline">HUMANITARIAN PLATFORM · PI NETWORK</div>
   <div class="spin" id="splash-spin"></div>
   <div class="pi-badge">MAINNET · PI EXCLUSIVE</div>
+  <button id="login-btn" onclick="piLogin()" style="display:none;margin-top:.5rem;padding:.9rem 2rem;background:linear-gradient(135deg,#1a56db,#0ea5e9);border:none;border-radius:14px;color:#fff;font-size:.95rem;font-weight:800;min-height:54px;cursor:pointer;touch-action:manipulation;width:100%;max-width:300px;box-shadow:0 8px 24px rgba(14,165,233,.35)">Sign In with Pi</button>
+  <button id="guest-btn" onclick="guestMode()" style="display:none;margin-top:.4rem;padding:.7rem 2rem;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.15);border-radius:14px;color:rgba(240,246,255,.7);font-size:.85rem;font-weight:600;min-height:46px;cursor:pointer;touch-action:manipulation;width:100%;max-width:300px">Continue as Guest</button>
+  <div id="splash-msg" style="font-size:.54rem;color:rgba(240,246,255,.45);margin-top:.5rem;text-align:center;max-width:280px;line-height:1.6"></div>
 </div>
 
 <!-- MAIN APP -->
@@ -1977,9 +1980,30 @@ function onIncompletePayment(payment) {
   }
 }
 
-/* Copa exact piLogin — Pi.init inside, catch ALSO hides splash */
+function showSplashBtns(msg) {
+  var spin = document.getElementById('splash-spin');
+  var btn  = document.getElementById('login-btn');
+  var gb   = document.getElementById('guest-btn');
+  var sm   = document.getElementById('splash-msg');
+  if (spin) spin.style.display = 'none';
+  if (btn)  btn.style.display  = 'block';
+  if (gb)   gb.style.display   = 'block';
+  if (sm && msg) sm.textContent = msg;
+}
+
 function piLogin() {
-  Pi.init({ version:'2.0', sandbox:false }); /* MAINNET */
+  var btn = document.getElementById('login-btn');
+  var spin = document.getElementById('splash-spin');
+  var sm = document.getElementById('splash-msg');
+  if (btn)  btn.style.display  = 'none';
+  if (spin) spin.style.display = 'block';
+  if (sm)   sm.textContent     = 'Connecting...';
+
+  try { Pi.init({ version:'2.0', sandbox:false }); } catch(e) {
+    showSplashBtns('SDK error — please restart Pi Browser.');
+    return;
+  }
+
   Pi.authenticate(['username','payments'], onIncompletePayment)
     .then(function(auth){
       piUser = auth.user;
@@ -1988,21 +2012,28 @@ function piLogin() {
       launchApp();
     })
     .catch(function(e){
-      hideSplash();
-      launchApp();
+      showSplashBtns('Sign in failed — tap to try again.');
     });
 }
 
-/* Copa exact window.addEventListener load */
+function guestMode() {
+  piUser = { username:'guest', isGuest:true };
+  try{localStorage.setItem('unhcr_user',JSON.stringify(piUser));}catch(e){}
+  hideSplash();
+  launchApp();
+}
+
 window.addEventListener('load', function() {
   /* Restore session */
   try{var s=localStorage.getItem('unhcr_user');if(s)piUser=JSON.parse(s);}catch(e){}
-  /* Copa pattern */
+  if (piUser && piUser.username) { hideSplash(); launchApp(); return; }
+
   if (window.Pi) {
+    /* Pi Browser — auto-attempt login */
     piLogin();
   } else {
-    hideSplash();
-    launchApp();
+    /* Not Pi Browser — show buttons immediately */
+    showSplashBtns('Open this app in Pi Browser to sign in.');
   }
 });
 
@@ -4046,7 +4077,7 @@ function renderCommunity(){
     +'<div style="background:rgba(14,165,233,.1);border:1px solid rgba(14,165,233,.2);border-radius:14px;padding:1rem;margin-bottom:.5rem;cursor:pointer" onclick="openVolRegister()">&#x1F64B; Register as Volunteer</div>'
     +'<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:1rem;margin-bottom:.5rem;cursor:pointer" onclick="openNoticeBoard()">&#x1F4CB; Notice Board</div>'
     +'<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:1rem;margin-bottom:.5rem;cursor:pointer" onclick="openCommunityEvents()">&#x1F4C5; Community Events</div>'
-    +'<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:1rem;margin-bottom:.5rem;cursor:pointer" onclick="openVolOpp('All')">&#x1F91D; Volunteer Opportunities</div>'
+    +'<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:1rem;margin-bottom:.5rem;cursor:pointer" onclick="openVolOpp(&quot;All&quot;)">&#x1F91D; Volunteer Opportunities</div>'
     +'<div style="height:90px"></div></div>';
 }
 
