@@ -198,7 +198,38 @@ html,body{height:100%;font-family:system-ui,-apple-system,sans-serif;background:
 </div>
 
 <div id="toast"></div>
-<script>/* ═══ GLOBAL DATA — must be first ═══ */
+<script>/* ══ SW KILLER — runs immediately, kills all old cached versions ══ */
+if ('serviceWorker' in navigator) {
+  /* Delete ALL caches immediately */
+  if ('caches' in window) {
+    caches.keys().then(function(keys) {
+      keys.forEach(function(k) { caches.delete(k); });
+    });
+  }
+  /* Unregister ALL old service workers */
+  navigator.serviceWorker.getRegistrations().then(function(regs) {
+    regs.forEach(function(reg) {
+      reg.unregister();
+      console.log('[App] Unregistered old SW:', reg.scope);
+    });
+  });
+  /* Register fresh SW after short delay */
+  window.addEventListener('load', function() {
+    setTimeout(function() {
+      navigator.serviceWorker.register('/sw.js?v=9').then(function(reg) {
+        console.log('[App] SW v9 registered');
+        /* Listen for SW telling us to reload */
+        navigator.serviceWorker.addEventListener('message', function(e) {
+          if (e.data && e.data.type === 'SW_UPDATED') {
+            console.log('[App] SW updated — fresh content available');
+          }
+        });
+      });
+    }, 1500);
+  });
+}
+
+/* ═══ GLOBAL DATA — must be first ═══ */
 var _lang='English';
 var _mood=[];
 var _docs={};
