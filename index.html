@@ -253,6 +253,144 @@ try{var _se=localStorage.getItem('unhcr_contacts');if(_se)_emergContacts=JSON.pa
 try{var _sx=localStorage.getItem('unhcr_tx');if(_sx)_txHistory=JSON.parse(_sx);}catch(e){}
 
 
+
+function navTo(tab){
+  var btns=document.querySelectorAll('.nb');
+  var map={home:0,emergency:1,resources:2,community:3,wallet:4,myunhcr:5};
+  goTab(tab,btns[map[tab]||0]);
+}
+
+function renderHome(){
+  var el=document.getElementById('home-scroll');
+  if(!el)return;
+  var name=piUser&&piUser.username?piUser.username:'Pioneer';
+  var h=new Date().getHours();
+  var greet=h<12?'Good Morning':h<17?'Good Afternoon':'Good Evening';
+  var today=new Date().toDateString();
+  var moodArr=Array.isArray(_mood)?_mood:[];
+  var tm=moodArr.filter(function(m){return m.date===today;})[0]||null;
+  var mE=tm?['&#x1F604;','&#x1F642;','&#x1F610;','&#x1F61F;','&#x1F622;'][tm.score]:'&#x1FA9C;';
+  var docsSafe=(_docs&&typeof _docs==='object')?_docs:{};
+  var dc=Object.keys(docsSafe).filter(function(k){return docsSafe[k];}).length;
+  var dp=Math.round(dc/12*100);
+
+  var out='';
+
+  /* TOP BAR */
+  out+='<div style="padding:.65rem 1rem .3rem;display:flex;align-items:center;justify-content:space-between">';
+  out+='<div>';
+  out+='<div style="font-size:.42rem;color:rgba(240,246,255,.38)">'+greet+', <b style="color:rgba(240,246,255,.8)">@'+name+'</b></div>';
+  out+='<div style="font-size:.98rem;font-weight:900;line-height:1.15;letter-spacing:-.01em">Humanitarian Hub</div>';
+  out+='<div style="font-size:.38rem;color:rgba(240,246,255,.25);margin-top:.06rem">Independent information platform &middot; Pi Network</div>';
+  out+='</div>';
+  out+='<div style="display:flex;gap:.24rem">';
+  out+='<button onclick="openCrisisAlerts()" class="hdr-btn" style="position:relative">&#x1F6A8;<div class="notif-dot"></div></button>';
+  out+='<button onclick="openSearch()" class="hdr-btn">&#x1F50D;</button>';
+  out+='</div></div>';
+
+  /* STATS STRIP */
+  out+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.28rem;padding:0 1rem;margin:.22rem 0">';
+  out+=hstat(mE,'Mood','openWellbeing()');
+  out+=hstat(dp+'%','Docs','openDocChecklist()');
+  out+='<div onclick="openCrisisAlerts()" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:.42rem .2rem;text-align:center;cursor:pointer;touch-action:manipulation"><div id="alert-count" style="font-size:.78rem;font-weight:800;color:#ef4444;line-height:1">&#x2022;&#x2022;&#x2022;</div><div style="font-size:.3rem;color:rgba(240,246,255,.28);margin-top:.05rem">Alerts</div></div>';
+  out+=hstat('&#x1F9EA;','Check','openSymptomChecker()');
+  out+='</div>';
+
+  /* INDEPENDENCE NOTICE */
+  out+='<div style="margin:.18rem 1rem;background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.14);border-radius:9px;padding:.4rem .7rem;font-size:.38rem;color:rgba(245,158,11,.65);line-height:1.75">&#x2139;&#xFE0F; <b>Independent application</b> — Not affiliated with, endorsed by, or operated by UNHCR or the United Nations.</div>';
+
+  /* EMERGENCY */
+  out+='<div class="sh">&#x1F6A8; Emergency <span class="badge-now">AVAILABLE NOW</span></div>';
+  out+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.32rem;padding:0 1rem .2rem">';
+  out+=hbtn('&#x1F4DE;','rgba(239,68,68,.18)','Emergency Numbers','openEmergencyContacts()');
+  out+=hbtn('&#x1FA79;','rgba(239,68,68,.15)','First Aid & CPR','openFirstAid()');
+  out+=hbtn('&#x1F4CB;','rgba(239,68,68,.13)','Checklist','openEmergencyChecklist()');
+  out+=hbtn('&#x1F690;','rgba(239,68,68,.12)','Evacuation','openEvacuation()');
+  out+=hbtn('&#x1F9F0;','rgba(239,68,68,.11)','Preparedness','openPreparedness()');
+  out+=hbtn('&#x1F4F5;','rgba(239,68,68,.1)','Offline Info','openSOSCenter()');
+  out+='</div>';
+
+  /* FIND HELP */
+  out+='<div class="sh">&#x1F3E0; Find Help <span class="badge-now">AVAILABLE NOW</span></div>';
+  out+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:.35rem;padding:0 1rem .2rem">';
+  out+=hrow('&#x1F3E0;','rgba(245,158,11,.18)','Shelter','Emergency shelter contacts','openShelter()');
+  out+=hrow('&#x1FA7A;','rgba(16,185,129,.18)','Healthcare','Clinics & health information','openHealthcare()');
+  out+=hrow('&#x1F35E;','rgba(245,158,11,.14)','Food & Basic Needs','Assistance information','openResFood()');
+  out+=hrow('&#x1F4A7;','rgba(14,165,233,.15)','Water & Hygiene','WASH resources','openWASH()');
+  out+=hrow('&#x2696;&#xFE0F;','rgba(14,165,233,.18)','Legal & Rights','Rights & legal aid','openLegalAid()');
+  out+=hrow('&#x1F4DA;','rgba(124,58,237,.18)','Education','Learning resources','openEducation()');
+  out+='</div>';
+
+  /* QUICK RESOURCES */
+  out+='<div class="sh">&#x1F4DA; Quick Resources <span class="badge-now">AVAILABLE NOW</span></div>';
+  out+='<div style="display:flex;gap:.28rem;padding:0 1rem .2rem;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">';
+  out+=qtool('&#x1F32A;','Disasters','openDisasterCenter()');
+  out+=qtool('&#x1F9E0;','Mental Health','openMentalHealth()');
+  out+=qtool('&#x1F4AC;','Phrases','openPhraseCards()');
+  out+=qtool('&#x1F4CD;','Services','openServicesFinder()');
+  out+=qtool('&#x1F512;','Safety','openDigitalSafety()');
+  out+=qtool('&#x1F3AF;','Scam Alert','openScamAwareness()');
+  out+=qtool('&#x1F916;','AI Help','openAI()');
+  out+=qtool('&#x1F4D6;','Library','openHumLibrary()');
+  out+='</div>';
+
+  /* COMMUNITY */
+  out+='<div class="sh">&#x1F91D; Community <span class="badge-now">AVAILABLE NOW</span></div>';
+  out+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.32rem;padding:0 1rem .2rem">';
+  out+=hbtn('&#x1F64B;','rgba(14,165,233,.16)','Volunteer','navTo("community")');
+  out+=hbtn('&#x1F465;','rgba(14,165,233,.13)','Groups','openCommunityGroups()');
+  out+=hbtn('&#x1F4CB;','rgba(14,165,233,.11)','Notices','openNoticeBoard()');
+  out+='</div>';
+
+  /* SEARCH */
+  out+='<div class="sh">&#x1F50D; Find a Resource</div>';
+  out+='<div style="padding:0 1rem .3rem"><input class="srch-inp" placeholder="&#x1F50D; Search resources, services, guides..." oninput="searchRes(this.value)" style="width:100%"></div>';
+
+  /* COMING SOON */
+  out+='<div class="sh">&#x1F51C; Coming Soon <span class="badge-soon">COMING SOON</span></div>';
+  out+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:.3rem;padding:0 1rem .3rem">';
+  out+=csoon('&#x1F4CD;','Nearby Help (GPS)','Location-based resource finder');
+  out+=csoon('&#x1F916;','AI Humanitarian Assistant','Intelligent guidance');
+  out+=csoon('&#x1F5FA;&#xFE0F;','Humanitarian GIS Map','Geographic mapping');
+  out+=csoon('&#x1F4BC;','Jobs & Livelihoods','Employment support');
+  out+=csoon('&#x1F46A;','Family Reunification','Separated family resources');
+  out+=csoon('&#x1F331;','Climate & Resilience','Environmental resources');
+  out+='</div>';
+
+  /* CRISIS ALERTS */
+  out+='<div class="sh">&#x1F6A8; Crisis Alerts <span onclick="openCrisisAlerts()" style="font-size:.4rem;color:#0ea5e9;cursor:pointer;margin-left:auto;letter-spacing:0;text-transform:none;font-weight:700">View all &#x203A;</span></div>';
+  out+='<div style="padding:0 1rem">';
+  out+='<div onclick="openCrisisAlerts()" style="background:rgba(239,68,68,.08);border:1.5px solid rgba(239,68,68,.2);border-radius:13px;padding:.78rem 1rem;cursor:pointer;touch-action:manipulation">';
+  out+='<div style="display:flex;gap:.42rem;align-items:flex-start">';
+  out+='<div style="font-size:1rem;flex-shrink:0">&#x1F6A8;</div>';
+  out+='<div><div style="font-size:.56rem;font-weight:800;color:#fca5a5;margin-bottom:.08rem">Live Humanitarian Alerts</div>';
+  out+='<div style="font-size:.44rem;color:rgba(240,246,255,.46);line-height:1.72">Tap to view real-time crisis alerts from ReliefWeb (UN OCHA). Updated automatically.</div>';
+  out+='</div></div></div></div>';
+  out+='<div style="height:80px"></div>';
+
+  el.innerHTML=out;
+}
+
+function hstat(val,lbl,fn){
+  return '<div onclick="'+fn+'" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:.42rem .2rem;text-align:center;cursor:pointer;touch-action:manipulation"><div style="font-size:.78rem;font-weight:800;line-height:1">'+val+'</div><div style="font-size:.3rem;color:rgba(240,246,255,.28);margin-top:.05rem">'+lbl+'</div></div>';
+}
+
+function hbtn(ico,ibg,lbl,fn){
+  return '<div onclick="'+fn+'" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:.6rem .4rem;cursor:pointer;touch-action:manipulation;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.18rem;min-height:68px;text-align:center"><div style="width:36px;height:36px;border-radius:9px;background:'+ibg+';display:flex;align-items:center;justify-content:center;font-size:1rem">'+ico+'</div><div style="font-size:.36rem;font-weight:700;color:rgba(240,246,255,.72);line-height:1.25">'+lbl+'</div></div>';
+}
+
+function hrow(ico,ibg,t,s,fn){
+  return '<div onclick="'+fn+'" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:.62rem .75rem;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;gap:.48rem;min-height:58px"><div style="width:36px;height:36px;border-radius:9px;background:'+ibg+';display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0">'+ico+'</div><div><div style="font-size:.56rem;font-weight:700;color:#F0F6FF;line-height:1.25">'+t+'</div><div style="font-size:.37rem;color:rgba(240,246,255,.36);margin-top:.04rem">'+s+'</div></div></div>';
+}
+
+function qtool(ico,lbl,fn){
+  return '<div onclick="'+fn+'" style="flex-shrink:0;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:.48rem .55rem;text-align:center;cursor:pointer;touch-action:manipulation;min-width:56px"><div style="font-size:1.05rem;line-height:1">'+ico+'</div><div style="font-size:.32rem;font-weight:600;color:rgba(240,246,255,.5);margin-top:.1rem;line-height:1.2">'+lbl+'</div></div>';
+}
+
+function csoon(ico,t,s){
+  return '<div style="background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.055);border-radius:12px;padding:.6rem .72rem;display:flex;align-items:center;gap:.42rem"><div style="font-size:1rem;flex-shrink:0">'+ico+'</div><div><div style="font-size:.5rem;font-weight:600;color:rgba(240,246,255,.45)">'+t+'</div><div style="font-size:.34rem;color:rgba(240,246,255,.25);margin-top:.06rem">'+s+'</div><span class="badge-soon" style="margin-top:.1rem;display:inline-flex">&#x1F51C; SOON</span></div></div>';
+}
+
 var piUser=null;
 var _APPROVE='/approve',_COMPLETE='/complete',_CANCEL='/cancel-payment';
 try{var _s=localStorage.getItem('unhcr_user');if(_s)piUser=JSON.parse(_s);}catch(e){}
@@ -291,155 +429,12 @@ try{var _s=localStorage.getItem('unhcr_user');if(_s)piUser=JSON.parse(_s);}catch
 
 window.addEventListener('load',function(){if(piUser&&piUser.username){showApp();}});
 
-function renderHome(){
 
-  var name=piUser&&piUser.username?piUser.username:'Pioneer';
-  var h=new Date().getHours();
-  var greet=h<12?'Good Morning':h<17?'Good Afternoon':'Good Evening';
-  var today=new Date().toDateString();
-  var _moodSafe=Array.isArray(_mood)?_mood:[];var tm=_moodSafe.find?_moodSafe.find(function(m){return m.date===today;}):null;
-  var mE=tm?['&#x1F604;','&#x1F642;','&#x1F610;','&#x1F61F;','&#x1F622;'][tm.score]:'&#x1FA9C;';
-  var _docsSafe=(_docs&&typeof _docs==='object')?_docs:{};var dc=Object.keys(_docsSafe).filter(function(k){return _docsSafe[k];}).length;
-  var dp=Math.round(dc/12*100);
-  var el=document.getElementById('home-scroll');
-  if(!el)return;
 
-  el.innerHTML=
-  /* ── TOP BAR ── */
-  '<div style="padding:.65rem 1rem .3rem;display:flex;align-items:center;justify-content:space-between">'
-    +'<div>'
-      +'<div style="font-size:.42rem;color:rgba(240,246,255,.38)">'+greet+', <b style="color:rgba(240,246,255,.8)">@'+name+'</b></div>'
-      +'<div style="font-size:.98rem;font-weight:900;line-height:1.15;letter-spacing:-.01em">Humanitarian Hub</div>'
-      +'<div style="font-size:.38rem;color:rgba(240,246,255,.25);margin-top:.06rem">Independent information platform &middot; Pi Network</div>'
-    +'</div>'
-    +'<div style="display:flex;gap:.24rem">'
-      +'<button onclick="openCrisisAlerts()" class="hdr-btn" style="position:relative">&#x1F6A8;<div class="notif-dot"></div></button>'
-      +'<button onclick="openSearch()" class="hdr-btn">&#x1F50D;</button>'
-    +'</div>'
-  +'</div>'
 
-  /* ── STATS STRIP ── */
-  +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.28rem;padding:0 1rem;margin:.22rem 0">'
-    +hstat(mE,'Mood','openWellbeing()')
-    +hstat(dp+'%','Docs','openDocChecklist()')
-    +'<div onclick="openCrisisAlerts()" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:.42rem .2rem;text-align:center;cursor:pointer;touch-action:manipulation"><div id="alert-count" style="font-size:.78rem;font-weight:800;color:#ef4444;line-height:1">&#x2022;&#x2022;&#x2022;</div><div style="font-size:.3rem;color:rgba(240,246,255,.28);margin-top:.05rem">Alerts</div></div>'
-    +hstat('&#x1F9EA;','Check','openSymptomChecker()')
-  +'</div>'
 
-  /* ── INDEPENDENCE NOTICE ── */
-  +'<div style="margin:.18rem 1rem;background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.14);border-radius:9px;padding:.4rem .7rem;font-size:.38rem;color:rgba(245,158,11,.65);line-height:1.75">'
-    +'&#x2139;&#xFE0F; <b>Independent application</b> — Not affiliated with, endorsed by, or operated by UNHCR or the United Nations.'
-  +'</div>'
 
-  /* ── EMERGENCY ── */
-  +'<div class="sh">&#x1F6A8; Emergency <span class="badge-now">AVAILABLE NOW</span></div>'
-  +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.32rem;padding:0 1rem .2rem">'
-    +hbtn('&#x1F4DE;','rgba(239,68,68,.18)','Emergency Numbers','openEmergencyContacts()')
-    +hbtn('&#x1FA79;','rgba(239,68,68,.15)','First Aid & CPR','openFirstAid()')
-    +hbtn('&#x1F4CB;','rgba(239,68,68,.13)','Checklist','openEmergencyChecklist()')
-    +hbtn('&#x1F690;','rgba(239,68,68,.12)','Evacuation','openEvacuation()')
-    +hbtn('&#x1F9F0;','rgba(239,68,68,.11)','Preparedness','openPreparedness()')
-    +hbtn('&#x1F4F5;','rgba(239,68,68,.1)','Offline Info','openSOSCenter()')
-  +'</div>'
 
-  /* ── FIND HELP ── */
-  +'<div class="sh">&#x1F3E0; Find Help <span class="badge-now">AVAILABLE NOW</span></div>'
-  +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:.35rem;padding:0 1rem .2rem">'
-    +hrow('&#x1F3E0;','rgba(245,158,11,.18)','Shelter','Emergency shelter contacts','openShelter()')
-    +hrow('&#x1FA7A;','rgba(16,185,129,.18)','Healthcare','Clinics & health information','openHealthcare()')
-    +hrow('&#x1F35E;','rgba(245,158,11,.14)','Food & Basic Needs','Assistance information','openResFood()')
-    +hrow('&#x1F4A7;','rgba(14,165,233,.15)','Water & Hygiene','WASH resources','openWASH()')
-    +hrow('&#x2696;&#xFE0F;','rgba(14,165,233,.18)','Legal & Rights','Rights & legal aid','openLegalAid()')
-    +hrow('&#x1F4DA;','rgba(124,58,237,.18)','Education','Learning resources','openEducation()')
-  +'</div>'
-
-  /* ── QUICK RESOURCES ── */
-  +'<div class="sh">&#x1F4DA; Quick Resources <span class="badge-now">AVAILABLE NOW</span></div>'
-  +'<div style="display:flex;gap:.28rem;padding:0 1rem .2rem;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">'
-    +qtool('&#x1F32A;','Disasters','openDisasterCenter()')
-    +qtool('&#x1F9E0;','Mental Health','openMentalHealth()')
-    +qtool('&#x1F4AC;','Phrases','openPhraseCards()')
-    +qtool('&#x1F4CD;','Services','openServicesFinder()')
-    +qtool('&#x1F512;','Digital Safety','openDigitalSafety()')
-    +qtool('&#x1F3AF;','Scam Alert','openScamAwareness()')
-    +qtool('&#x1F916;','AI Help','openAI()')
-    +qtool('&#x1F4D6;','Library','openHumLibrary()')
-  +'</div>'
-
-  /* ── COMMUNITY ── */
-  +'<div class="sh">&#x1F91D; Community <span class="badge-now">AVAILABLE NOW</span></div>'
-  +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.32rem;padding:0 1rem .2rem">'
-    +hbtn('&#x1F64B;','rgba(14,165,233,.16)','Volunteer',"goTab('community',document.querySelectorAll('.nb')[3])")
-    +hbtn('&#x1F465;','rgba(14,165,233,.13)','Groups','openCommunityGroups()')
-    +hbtn('&#x1F4CB;','rgba(14,165,233,.11)','Notices','openNoticeBoard()')
-  +'</div>'
-
-  /* ── FIND A RESOURCE ── */
-  +'<div class="sh">&#x1F50D; Find a Resource</div>'
-  +'<div style="padding:0 1rem .3rem">'
-    +'<input class="srch-inp" placeholder="&#x1F50D; Search resources, services, guides..." oninput="searchRes(this.value)" style="width:100%">'
-  +'</div>'
-
-  /* ── COMING SOON ── */
-  +'<div class="sh">&#x1F51C; Coming Soon <span class="badge-soon">COMING SOON</span></div>'
-  +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:.3rem;padding:0 1rem .3rem">'
-    +csoon('&#x1F4CD;','Nearby Help (GPS)','Location-based resource finder')
-    +csoon('&#x1F916;','AI Humanitarian Assistant','Intelligent humanitarian guidance')
-    +csoon('&#x1F5FA;&#xFE0F;','Humanitarian GIS Map','Geographic resource mapping')
-    +csoon('&#x1F4BC;','Jobs & Livelihoods','Employment & income support')
-    +csoon('&#x1F46A;','Family Reunification','Separated family resources')
-    +csoon('&#x1F331;','Climate & Resilience','Environmental humanitarian resources')
-  +'</div>'
-
-  /* ── LIVE ALERTS ── */
-  +'<div class="sh">&#x1F6A8; Crisis Alerts <span onclick="openCrisisAlerts()" style="font-size:.4rem;color:#0ea5e9;cursor:pointer;margin-left:auto;letter-spacing:0;text-transform:none;font-weight:700">View all &#x203A;</span></div>'
-  +'<div style="padding:0 1rem">'
-    +'<div onclick="openCrisisAlerts()" style="background:rgba(239,68,68,.08);border:1.5px solid rgba(239,68,68,.2);border-radius:13px;padding:.78rem 1rem;cursor:pointer;touch-action:manipulation">'
-      +'<div style="display:flex;gap:.42rem;align-items:flex-start">'
-        +'<div style="font-size:1rem;flex-shrink:0">&#x1F6A8;</div>'
-        +'<div><div style="font-size:.56rem;font-weight:800;color:#fca5a5;margin-bottom:.08rem">Live Humanitarian Alerts</div>'
-        +'<div style="font-size:.44rem;color:rgba(240,246,255,.46);line-height:1.72">Tap to view real-time crisis alerts from ReliefWeb (UN OCHA). Updated automatically.</div></div>'
-      +'</div>'
-    +'</div>'
-  +'</div>'
-  +'<div style="height:80px"></div>';
-}
-
-/* ── HOME HELPER COMPONENTS ── */
-
-function hstat(val,lbl,fn){
-  return '<div onclick="'+fn+'" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:.42rem .2rem;text-align:center;cursor:pointer;touch-action:manipulation">'
-    +'<div style="font-size:.78rem;font-weight:800;line-height:1">'+val+'</div>'
-    +'<div style="font-size:.3rem;color:rgba(240,246,255,.28);margin-top:.05rem">'+lbl+'</div>'
-    +'</div>';
-}
-function hbtn(ico,ibg,lbl,fn){
-  return '<div onclick="'+fn+'" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:.6rem .4rem;cursor:pointer;touch-action:manipulation;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.18rem;min-height:68px;text-align:center">'
-    +'<div style="width:36px;height:36px;border-radius:9px;background:'+ibg+';display:flex;align-items:center;justify-content:center;font-size:1rem">'+ico+'</div>'
-    +'<div style="font-size:.36rem;font-weight:700;color:rgba(240,246,255,.72);line-height:1.25">'+lbl+'</div>'
-    +'</div>';
-}
-function hrow(ico,ibg,t,s,fn){
-  return '<div onclick="'+fn+'" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:.62rem .75rem;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;gap:.48rem;min-height:58px">'
-    +'<div style="width:36px;height:36px;border-radius:9px;background:'+ibg+';display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0">'+ico+'</div>'
-    +'<div><div style="font-size:.56rem;font-weight:700;color:#F0F6FF;line-height:1.25">'+t+'</div>'
-    +'<div style="font-size:.37rem;color:rgba(240,246,255,.36);margin-top:.04rem">'+s+'</div></div>'
-    +'</div>';
-}
-function qtool(ico,lbl,fn){
-  return '<div onclick="'+fn+'" style="flex-shrink:0;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:.48rem .55rem;text-align:center;cursor:pointer;touch-action:manipulation;min-width:56px">'
-    +'<div style="font-size:1.05rem;line-height:1">'+ico+'</div>'
-    +'<div style="font-size:.32rem;font-weight:600;color:rgba(240,246,255,.5);margin-top:.1rem;line-height:1.2">'+lbl+'</div>'
-    +'</div>';
-}
-function csoon(ico,t,s){
-  return '<div style="background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.055);border-radius:12px;padding:.6rem .72rem;display:flex;align-items:center;gap:.42rem">'
-    +'<div style="font-size:1rem;flex-shrink:0">'+ico+'</div>'
-    +'<div><div style="font-size:.5rem;font-weight:600;color:rgba(240,246,255,.45)">'+t+'</div>'
-    +'<div style="font-size:.34rem;color:rgba(240,246,255,.25);margin-top:.06rem">'+s+'</div>'
-    +'<span class="badge-soon" style="margin-top:.1rem;display:inline-flex">&#x1F51C; SOON</span></div>'
-    +'</div>';
-}
 
 function openWASH(){
   openP('&#x1F4A7; Water, Sanitation & Hygiene',
