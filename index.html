@@ -3586,56 +3586,39 @@ function submitPayment() {
 function submitPiPayment(amount, memo) {
   if (typeof Pi === 'undefined') { toast('Open in Pi Browser for payments', 'e'); return; }
   if (!piUser || piUser.isGuest) { toast('Sign in with Pi to make payments', 'e'); return; }
-
   toast('Opening Pi payment...');
-
-  Pi.init({version:'2.0', sandbox:false});
-
-  /* Small delay after Pi.init before createPayment — required on Mainnet */
-  setTimeout(function(){
-    Pi.createPayment({
-      amount: amount,
-      memo: memo,
-      metadata: {app:'HumHub', type:'humanitarian'}
-    }, {
-      onReadyForServerApproval: function(paymentId) {
-        /* EXACT Haramain pattern: return fetch chain, NO extra .then, NO .catch */
-        return fetch('/approve', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({paymentId: paymentId})
-        }).then(function(r){ return r.json(); });
-      },
-      onReadyForServerCompletion: function(paymentId, txid) {
-        return fetch('/complete', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({paymentId: paymentId, txid: txid})
-        }).then(function(r){ return r.json(); })
-          .then(function(d){
-            _txHistory.push({
-              id: paymentId, txid: txid,
-              amount: amount, memo: memo,
-              type: 'out', date: new Date().toISOString()
-            });
-            saveTx();
-            toast('Payment complete — thank you!', 's');
-            setTimeout(function(){ renderWallet(); }, 800);
-          }).catch(function(){});
-      },
-      onCancel: function(paymentId) {
-        fetch('/cancel-payment', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({paymentId: paymentId})
-        }).catch(function(){});
-        toast('Payment cancelled');
-      },
-      onError: function(error, payment) {
-        toast('Payment error — please try again', 'e');
-      }
-    });
-  }, 300);
+  Pi.createPayment({
+    amount: amount,
+    memo: memo,
+    metadata: { app: 'HumHub', type: 'humanitarian', user: piUser.username }
+  }, {
+    onReadyForServerApproval: function(paymentId) {
+      fetch('/approve', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({paymentId:paymentId}) })
+        .then(function(r){ return r.json(); })
+        .then(function(d){ console.log('[HumHub] Approved:', d); })
+        .catch(function(e){ console.warn('[HumHub] Approve error:', e); });
+    },
+    onReadyForServerCompletion: function(paymentId, txid) {
+      fetch('/complete', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({paymentId:paymentId, txid:txid}) })
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          _txHistory.push({ id:paymentId, txid:txid, amount:amount, memo:memo, type:'out', date:new Date().toISOString() });
+          saveTx();
+          toast('Payment complete — thank you!', 's');
+          setTimeout(function(){ renderWallet(); }, 800);
+        })
+        .catch(function(e){ console.warn('[HumHub] Complete error:', e); });
+    },
+    onCancel: function(paymentId) {
+      fetch('/cancel-payment', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({paymentId:paymentId}) })
+        .catch(function(){});
+      toast('Payment cancelled');
+    },
+    onError: function(error, payment) {
+      console.error('[HumHub] Payment error:', error, payment);
+      toast('Payment error — please try again', 'e');
+    }
+  });
 }
 function escHtml(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
