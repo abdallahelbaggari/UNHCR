@@ -1499,6 +1499,28 @@ function renderCommunity(){
     +'</div>'
     +'<div style="height:90px"></div>';
 }
+
+function openSettings() {
+  var lang = _lang || 'English';
+  openP('&#x2699;&#xFE0F; Settings',
+    '<div class="pr-row" onclick="setLang(\"English\")"><div class="pr-ico" style="background:rgba(14,165,233,.15)">&#x1F1EC;&#x1F1E7;</div><div><div class="pr-t">English</div><div class="pr-s">Interface language</div></div><div class="pr-a">'+(lang==='English'?'&#x2705;':'&#x203A;')+'</div></div>'
+    + '<div class="pr-row" onclick="setLang(\"Hausa\")"><div class="pr-ico" style="background:rgba(16,185,129,.15)">&#x1F1F3;&#x1F1EC;</div><div><div class="pr-t">Hausa</div><div class="pr-s">Harshe</div></div><div class="pr-a">'+(lang==='Hausa'?'&#x2705;':'&#x203A;')+'</div></div>'
+    + '<div class="sh" style="padding:16px 0 6px">Data & Privacy</div>'
+    + '<div class="pr-row" onclick="clearAllData()"><div class="pr-ico" style="background:rgba(239,68,68,.15)">&#x1F5D1;&#xFE0F;</div><div><div class="pr-t">Clear All Local Data</div><div class="pr-s">Removes notes, checklist, contacts, history</div></div><div class="pr-a">&#x203A;</div></div>'
+    + '<div class="pr-row" onclick="closeP();openPrivacyInfo()"><div class="pr-ico" style="background:rgba(124,58,237,.15)">&#x1F512;</div><div><div class="pr-t">Privacy Policy</div><div class="pr-s">How we handle your data</div></div><div class="pr-a">&#x203A;</div></div>'
+    + '<div class="pr-row" onclick="closeP();openAbout()"><div class="pr-ico" style="background:rgba(14,165,233,.15)">&#x2139;&#xFE0F;</div><div><div class="pr-t">About Humanitarian Hub</div><div class="pr-s">v1.0 &middot; Pi Mainnet</div></div><div class="pr-a">&#x203A;</div></div>'
+    + '<button class="btn-p" style="background:rgba(239,68,68,.18);border:1.5px solid rgba(239,68,68,.3);color:#fca5a5;margin-top:16px;min-height:52px" onclick="closeP();doLogout()">&#x1F6AA; Sign Out</button>'
+  );
+}
+function setLang(l){ _lang=l; try{localStorage.setItem('unhcr_lang',l);}catch(e){} toast('Language set to '+l); closeP(); }
+function clearAllData(){
+  if(!confirm('Clear all local data? This cannot be undone.'))return;
+  var keys=['unhcr_mood','unhcr_docs','unhcr_notices','unhcr_saved','unhcr_notes','unhcr_contacts','unhcr_tx','unhcr_ec','unhcr_lang'];
+  keys.forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
+  toast('All local data cleared');
+  closeP();
+}
+
 function renderMyUNHCR(){
   var name=piUser&&piUser.username?piUser.username:'Pioneer';
   var isGuest=piUser&&piUser.isGuest;
@@ -1641,11 +1663,7 @@ function renderWallet() {
     + '<div style="height:90px"></div>';
 
   /* Try to get Pi balance via SDK */
-  if (typeof Pi !== 'undefined' && !isGuest) {
-    try {
-      Pi.init({ version: '2.0', sandbox: false });
-    } catch(e) {}
-  }
+  if (typeof Pi !== 'undefined' && !isGuest) {}
 }
 
 
@@ -1798,59 +1816,7 @@ if ('serviceWorker' in navigator) {
     });
   }
   /* Then register fresh SW after short delay */
-  setTimeout(function() {
-    navigator.serviceWorker.register('sw.js').catch(function() {});
-  }, 1000);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function askAI(q) {
-  if (!q || !q.trim()) return;
-  var msgDiv = document.getElementById('ai-msgs');
-  if (!msgDiv) return;
-  /* User message bubble */
-  msgDiv.innerHTML += '<div style="background:rgba(14,165,233,.1);border:1px solid rgba(14,165,233,.2);border-radius:10px 10px 2px 10px;padding:.6rem .8rem;margin-bottom:.35rem;font-size:.54rem;color:rgba(240,246,255,.8);text-align:right;line-height:1.75">' + escHtml(q) + '</div>';
-  /* Typing indicator */
-  var tid = 'ait' + Date.now();
-  msgDiv.innerHTML += '<div id="' + tid + '" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px 10px 10px 2px;padding:.6rem .8rem;margin-bottom:.35rem;font-size:.54rem;color:rgba(240,246,255,.38);line-height:1.75">&#x1F4AC; Thinking...</div>';
-  msgDiv.scrollTop = msgDiv.scrollHeight;
-  var inp = document.getElementById('ai-inp');
-  if (inp) inp.value = '';
-  fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 400,
-      system: 'You are a compassionate humanitarian support assistant for the UNHCR community platform. Help vulnerable people with emergency resources, shelter, healthcare, legal aid, education, and humanitarian support. Be clear, practical, and concise. Always recommend calling 112 for immediate emergencies. Never provide medical diagnosis. Never ask for passwords, seed phrases, or private keys. Respond in the user\'s language when possible.',
-      messages: [{role: 'user', content: q}]
-    })
-  }).then(function(r){return r.json();}).then(function(d){
-    var el = document.getElementById(tid);
-    var ans = (d.content&&d.content[0]&&d.content[0].text) ? d.content[0].text : 'I am here to help. For immediate emergencies call 112. Ask me about shelter, healthcare, legal rights, or education.';
-    if (el) { el.innerHTML='&#x1F916; '+escHtml(ans).replace(/\n/g,'<br>'); el.style.color='rgba(240,246,255,.75)'; }
-    msgDiv.scrollTop = msgDiv.scrollHeight;
-  }).catch(function(){
-    var el = document.getElementById(tid);
-    if (el) { el.innerHTML='&#x1F916; I am here to help with humanitarian resources. For emergencies call 112. Try asking about shelter, healthcare, legal aid, or education.'; el.style.color='rgba(240,246,255,.75)'; }
-  });
+  
 }
 
 function openAI() {
@@ -3295,7 +3261,7 @@ function openLang(){
       +'</div>';
     }).join(''));
 }
-function setLang(l){_lang=l;try{localStorage.setItem('unhcr_lang',l);}catch(e){}toast('Language set to '+l.split(' - ')[0],'s');openLang();}
+
 
 /* \u2500\u2500 44. HUMANITARIAN TIMELINE \u2500\u2500 */
 function openHumanitarianTimeline(){
@@ -3537,31 +3503,30 @@ function saveTx() { try { localStorage.setItem('unhcr_tx', JSON.stringify(_txHis
 
 
 function openPayPi() {
-  openP('⬆️ Pay with Pi',
-    '<div style="font-size:.52rem;color:rgba(240,246,255,.55);line-height:1.8;margin-bottom:.6rem">Send Pi to support UNHCR humanitarian services. All payments are processed via the Pi Network.</div>'
+  openP('&#x2B06;&#xFE0F; Pay with Pi',
+    '<div style="font-size:14px;color:var(--text-2);line-height:1.7;margin-bottom:16px">Send Pi to support Humanitarian Hub community resources. Processed via Pi Network — we never store your passphrase or keys.</div>'
     + '<label class="fl">Amount (Pi)</label>'
-    + '<input class="inp" id="pay-amt" type="number" min="0.01" step="0.01" placeholder="e.g. 1.0">'
-    + '<label class="fl">Memo</label>'
-    + '<input class="inp" id="pay-memo" placeholder="e.g. UNHCR Support">'
-    + '<button class="btn-p" onclick="submitPayment()">Pay with Pi</button>'
-    + '<div class="card card-orange" style="margin-top:.6rem"><div style="font-size:.46rem;color:rgba(245,158,11,.8);line-height:1.75">&#x26A0; You will be asked to approve this payment in Pi Browser. We never ask for your passphrase or private key.</div></div>'
+    + '<input class="inp" id="pay-amt" type="number" min="0.01" step="0.01" placeholder="e.g. 1.0" style="font-size:18px;min-height:54px">'
+    + '<label class="fl">Memo (optional)</label>'
+    + '<input class="inp" id="pay-memo" placeholder="Humanitarian contribution" style="min-height:50px">'
+    + '<button class="btn-p" style="margin-top:16px;font-size:17px;min-height:56px" onclick="submitPayment()">&#x1F4B0; Pay with Pi</button>'
+    + '<div class="card card-orange" style="margin-top:12px"><div style="font-size:12px;color:rgba(245,158,11,.85);line-height:1.75">&#x26A0; You will approve this payment inside Pi Browser. We never ask for your passphrase, seed phrase, or private key.</div></div>'
   );
 }
-
 function openDonatePi() {
-  openP('ᾐD Donate Pi',
-    '<div style="font-size:.52rem;color:rgba(240,246,255,.55);line-height:1.8;margin-bottom:.7rem">Select an amount to donate to the UNHCR community humanitarian fund.</div>'
-    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.4rem;margin-bottom:.5rem">'
-      + '<button onclick="donatePi(1)" class="btn-o" style="min-height:52px;font-size:.75rem;font-weight:800">π 1</button>'
-      + '<button onclick="donatePi(5)" class="btn-p" style="min-height:52px;font-size:.75rem;font-weight:800">π 5</button>'
-      + '<button onclick="donatePi(10)" class="btn-o" style="min-height:52px;font-size:.75rem;font-weight:800">π 10</button>'
+  openP('&#x2764;&#xFE0F; Donate Pi',
+    '<div style="font-size:14px;color:var(--text-2);line-height:1.7;margin-bottom:16px">Support the Humanitarian Hub platform and community resources with a Pi contribution.</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">'
+      + '<button onclick="donatePi(1)" class="btn-o" style="min-height:60px;font-size:20px;font-weight:900">&#x03C0; 1</button>'
+      + '<button onclick="donatePi(5)" class="btn-p" style="min-height:60px;font-size:20px;font-weight:900">&#x03C0; 5</button>'
+      + '<button onclick="donatePi(10)" class="btn-o" style="min-height:60px;font-size:20px;font-weight:900">&#x03C0; 10</button>'
     + '</div>'
-    + '<label class="fl">Custom Amount</label>'
-    + '<input class="inp" id="donate-amt" type="number" min="0.01" step="0.01" placeholder="e.g. 3.0">'
-    + '<button class="btn-p" style="margin-top:.3rem;background:linear-gradient(135deg,#059669,#10b981)" onclick="donatePiCustom()">Donate Pi</button>'
+    + '<label class="fl">Custom Amount (Pi)</label>'
+    + '<input class="inp" id="donate-amt" type="number" min="0.01" step="0.01" placeholder="e.g. 3.0" style="font-size:18px;min-height:54px">'
+    + '<button class="btn-p" style="margin-top:12px;min-height:56px;font-size:17px;background:linear-gradient(135deg,#059669,#10b981)" onclick="donatePiCustom()">&#x1F49A; Donate Pi</button>'
+    + '<div class="card card-blue" style="margin-top:12px"><div style="font-size:12px;color:var(--text-2);line-height:1.75">&#x2139;&#xFE0F; Contributions support this independent humanitarian platform. Not affiliated with UNHCR.</div></div>'
   );
 }
-
 function openCustomDonate(){openDonatePi();}
 
 function donatePi(amount) {
