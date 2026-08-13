@@ -979,7 +979,7 @@ try{var _su=localStorage.getItem('unhcr_user');if(_su)piUser=JSON.parse(_su);}ca
 function onIncompletePayment(p){if(!p)return;var t='';try{t=(p.transaction&&p.transaction.txid)?p.transaction.txid:'';}catch(e){}var pid=p.identifier;if(t){fetch(_COMPLETE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentId:pid,txid:t})}).catch(function(){});}else{fetch(_CANCEL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentId:pid})}).catch(function(){});}}
 function piLogin(){var btn=document.getElementById('loginBtn'),txt=document.getElementById('signin-txt'),msg=document.getElementById('lmsg');if(btn){btn.disabled=true;btn.style.opacity='0.6';}if(txt)txt.textContent='Connecting...';if(msg)msg.textContent='Connecting to Pi Network...';if(typeof Pi==='undefined'){setTimeout(function(){piUser={username:'Pioneer'};try{localStorage.setItem('unhcr_user',JSON.stringify(piUser));}catch(e){}showApp();},600);return;}Pi.init({version:'2.0',sandbox:false});Pi.authenticate(['username','payments'],onIncompletePayment).then(function(auth){piUser=auth.user;try{localStorage.setItem('unhcr_user',JSON.stringify(piUser));}catch(e){}showApp();}).catch(function(err){if(btn){btn.disabled=false;btn.style.opacity='1';}if(txt)txt.textContent='Sign In with Pi';if(msg)msg.textContent='Sign in failed - tap to try again.';});}
 function guestLogin(){piUser={username:'guest',isGuest:true};try{localStorage.setItem('unhcr_user',JSON.stringify(piUser));}catch(e){}showApp();}
-function showApp(){var L=document.getElementById('login'),A=document.getElementById('app');if(L)L.style.display='none';if(A){A.style.display='flex';A.style.flexDirection='column';}var av=document.getElementById('hdr-av');if(av&&piUser&&piUser.username)av.textContent=piUser.username[0].toUpperCase();goTab('home',document.querySelector('.nb'));setTimeout(fetchCrisisAlerts,800);}
+function showApp(){if(typeof Pi!=='undefined'){try{Pi.init({version:'2.0',sandbox:false});}catch(e){}}var L=document.getElementById('login'),A=document.getElementById('app');if(L)L.style.display='none';if(A){A.style.display='flex';A.style.flexDirection='column';}var av=document.getElementById('hdr-av');if(av&&piUser&&piUser.username)av.textContent=piUser.username[0].toUpperCase();goTab('home',document.querySelector('.nb'));setTimeout(fetchCrisisAlerts,800);}
 function launchApp(){showApp();}
 function goTab(name,el){document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('on');});var scr=document.getElementById('scr-'+name);if(scr)scr.classList.add('on');if(el)el.classList.add('on');if(name==='home')renderHome();else if(name==='emergency')renderEmergency();else if(name==='resources')renderResources();else if(name==='community'||name==='volunteer')renderCommunity();else if(name==='wallet')renderWallet();else if(name==='myunhcr'||name==='profile')renderMyUNHCR();}
 function doLogout(){try{localStorage.removeItem('unhcr_user');}catch(e){}piUser=null;var L=document.getElementById('login'),A=document.getElementById('app');if(A)A.style.display='none';if(L)L.style.display='flex';var btn=document.getElementById('loginBtn'),txt=document.getElementById('signin-txt'),msg=document.getElementById('lmsg');if(btn){btn.disabled=false;btn.style.opacity='1';}if(txt)txt.textContent='Sign In with Pi';if(msg)msg.textContent='';}
@@ -3530,54 +3530,59 @@ function openDonatePi() {
 function openCustomDonate(){openDonatePi();}
 
 function donatePi(amount) {
-  closeP();
+  if (typeof Pi === 'undefined') { toast('Open in Pi Browser to make payments', 'e'); return; }
+  if (!piUser || piUser.isGuest) { toast('Sign in with Pi to make payments', 'e'); return; }
   submitPiPayment(amount, 'Humanitarian Community Contribution');
 }
 
 function donatePiCustom() {
-  var amt = parseFloat(document.getElementById('donate-amt') && document.getElementById('donate-amt').value || 0);
+  var el = document.getElementById('donate-amt');
+  var amt = parseFloat(el && el.value || 0);
   if (!amt || amt < 0.01) { toast('Enter a valid amount', 'e'); return; }
   closeP();
-  submitPiPayment(amt, 'Humanitarian Community Contribution');
+  donatePi(amt);
 }
 
 function submitPayment() {
-  var amt = parseFloat(document.getElementById('pay-amt') && document.getElementById('pay-amt').value || 0);
-  var memo = (document.getElementById('pay-memo') && document.getElementById('pay-memo').value) || 'UNHCR Support';
+  var aEl = document.getElementById('pay-amt');
+  var mEl = document.getElementById('pay-memo');
+  var amt = parseFloat(aEl && aEl.value || 0);
+  var memo = (mEl && mEl.value) || 'Humanitarian Contribution';
   if (!amt || amt < 0.01) { toast('Enter a valid amount', 'e'); return; }
   closeP();
-  submitPiPayment(amt, memo);
+  donatePi(amt);
 }
 
-
-/* ══ UNHCR PAYMENTS — Copa exact pattern ══ */
+/* ══ Pi.createPayment — Copa exact ══ */
 function submitPiPayment(amount, memo) {
-  if (!piUser) { toast('Please sign in to make payments'); return; }
-  if (piUser.isGuest) { toast('Sign in with Pi to make payments'); return; }
+  if (!piUser || piUser.isGuest) { toast('Sign in with Pi to make payments'); return; }
+  if (typeof Pi === 'undefined') { toast('Open in Pi Browser for payments', 'e'); return; }
+  toast('Opening Pi payment...');
+  Pi.init({version:'2.0', sandbox:false});
   Pi.createPayment({
     amount: amount,
     memo: memo,
-    metadata: { app: 'HumHub', type: 'humanitarian', user: piUser.username, ts: Date.now() },
+    metadata: {app:'HumHub', type:'humanitarian', user:piUser.username, ts:Date.now()},
   }, {
     onReadyForServerApproval: function(paymentId) {
-      fetch(_APPROVE, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({paymentId:paymentId}) })
-        .then(function(r){ return r.json(); })
-        .then(function(d){ console.log('[HumHub] Approved:', d); })
-        .catch(function(e){ console.warn('[HumHub] Approve error:', e); });
+      fetch(_APPROVE, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({paymentId:paymentId})})
+        .then(function(r){return r.json();})
+        .then(function(d){console.log('[HumHub] Approved:',d);})
+        .catch(function(e){console.warn('[HumHub] Approve error:',e);});
     },
     onReadyForServerCompletion: function(paymentId, txid) {
-      fetch(_COMPLETE, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({paymentId:paymentId, txid:txid}) })
-        .then(function(r){ return r.json(); })
+      fetch(_COMPLETE, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({paymentId:paymentId, txid:txid})})
+        .then(function(r){return r.json();})
         .then(function(d){
-          _txHistory.push({ id:paymentId, txid:txid, amount:amount, memo:memo, type:'out', date:new Date().toISOString() });
+          _txHistory.push({id:paymentId, txid:txid, amount:amount, memo:memo, type:'out', date:new Date().toISOString()});
           saveTx();
           toast('Payment complete — thank you!', 's');
-          setTimeout(function(){ renderWallet(); }, 800);
+          setTimeout(function(){renderWallet();}, 800);
         })
-        .catch(function(e){ console.warn('[HumHub] Complete error:', e); });
+        .catch(function(e){console.warn('[HumHub] Complete error:',e);});
     },
     onCancel: function(paymentId) {
-      fetch(_CANCEL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({paymentId:paymentId}) })
+      fetch(_CANCEL, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({paymentId:paymentId})})
         .catch(function(){});
       toast('Payment cancelled');
     },
@@ -3587,8 +3592,6 @@ function submitPiPayment(amount, memo) {
     },
   });
 }
-
-
 function escHtml(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
