@@ -977,9 +977,45 @@ var piUser=null;
 var _APPROVE='/approve',_COMPLETE='/complete',_CANCEL='/cancel-payment';
 try{var _su=localStorage.getItem('unhcr_user');if(_su)piUser=JSON.parse(_su);}catch(e){}
 function onIncompletePayment(p){if(!p)return;var t='';try{t=(p.transaction&&p.transaction.txid)?p.transaction.txid:'';}catch(e){}var pid=p.identifier;if(t){fetch(_COMPLETE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentId:pid,txid:t})}).catch(function(){});}else{fetch(_CANCEL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentId:pid})}).catch(function(){});}}
-function piLogin(){var btn=document.getElementById('loginBtn'),txt=document.getElementById('signin-txt'),msg=document.getElementById('lmsg');if(btn){btn.disabled=true;btn.style.opacity='0.6';}if(txt)txt.textContent='Connecting...';if(msg)msg.textContent='Connecting to Pi Network...';if(typeof Pi==='undefined'){setTimeout(function(){piUser={username:'Pioneer'};try{localStorage.setItem('unhcr_user',JSON.stringify(piUser));}catch(e){}showApp();},600);return;}Pi.init({version:'2.0',sandbox:false});Pi.authenticate(['username','payments'],onIncompletePayment).then(function(auth){piUser=auth.user;try{localStorage.setItem('unhcr_user',JSON.stringify(piUser));}catch(e){}showApp();}).catch(function(err){if(btn){btn.disabled=false;btn.style.opacity='1';}if(txt)txt.textContent='Sign In with Pi';if(msg)msg.textContent='Sign in failed - tap to try again.';});}
+function piLogin() {
+  var btn=document.getElementById('loginBtn'),txt=document.getElementById('signin-txt'),msg=document.getElementById('lmsg');
+  if(btn){btn.disabled=true;btn.style.opacity='0.6';}
+  if(txt)txt.textContent='Connecting...';
+  if(msg)msg.textContent='Connecting to Pi Network...';
+  if(typeof Pi==='undefined'){
+    setTimeout(function(){
+      piUser={username:'Pioneer'};
+      try{localStorage.setItem('unhcr_user',JSON.stringify(piUser));}catch(e){}
+      showApp();
+    },600);
+    return;
+  }
+  Pi.init({version:'2.0', sandbox:false});
+  Pi.authenticate(['username','payments'], onIncompletePayment)
+    .then(function(auth){
+      piUser=auth.user;
+      try{localStorage.setItem('unhcr_user',JSON.stringify(piUser));}catch(e){}
+      showApp();
+    })
+    .catch(function(err){
+      if(btn){btn.disabled=false;btn.style.opacity='1';}
+      if(txt)txt.textContent='Sign In with Pi';
+      if(msg)msg.textContent='Sign in failed — tap to try again.';
+    });
+}
 function guestLogin(){piUser={username:'guest',isGuest:true};try{localStorage.setItem('unhcr_user',JSON.stringify(piUser));}catch(e){}showApp();}
-function showApp(){if(typeof Pi!=='undefined'){try{Pi.init({version:'2.0',sandbox:false});}catch(e){}}var L=document.getElementById('login'),A=document.getElementById('app');if(L)L.style.display='none';if(A){A.style.display='flex';A.style.flexDirection='column';}var av=document.getElementById('hdr-av');if(av&&piUser&&piUser.username)av.textContent=piUser.username[0].toUpperCase();goTab('home',document.querySelector('.nb'));setTimeout(fetchCrisisAlerts,800);}
+function showApp(){
+  if(typeof Pi!=='undefined'){
+    Pi.init({version:'2.0', sandbox:false});
+  }
+  var L=document.getElementById('login'),A=document.getElementById('app');
+  if(L)L.style.display='none';
+  if(A){A.style.display='flex';A.style.flexDirection='column';}
+  var av=document.getElementById('hdr-av');
+  if(av&&piUser&&piUser.username)av.textContent=piUser.username[0].toUpperCase();
+  goTab('home',document.querySelector('.nb'));
+  setTimeout(fetchCrisisAlerts,800);
+}
 function launchApp(){showApp();}
 function goTab(name,el){document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('on');});var scr=document.getElementById('scr-'+name);if(scr)scr.classList.add('on');if(el)el.classList.add('on');if(name==='home')renderHome();else if(name==='emergency')renderEmergency();else if(name==='resources')renderResources();else if(name==='community'||name==='volunteer')renderCommunity();else if(name==='wallet')renderWallet();else if(name==='myunhcr'||name==='profile')renderMyUNHCR();}
 function doLogout(){try{localStorage.removeItem('unhcr_user');}catch(e){}piUser=null;var L=document.getElementById('login'),A=document.getElementById('app');if(A)A.style.display='none';if(L)L.style.display='flex';var btn=document.getElementById('loginBtn'),txt=document.getElementById('signin-txt'),msg=document.getElementById('lmsg');if(btn){btn.disabled=false;btn.style.opacity='1';}if(txt)txt.textContent='Sign In with Pi';if(msg)msg.textContent='';}
@@ -3555,10 +3591,8 @@ function submitPayment() {
 
 /* ══ Pi.createPayment — Copa exact ══ */
 function submitPiPayment(amount, memo) {
-  if (!piUser || piUser.isGuest) { toast('Sign in with Pi to make payments'); return; }
-  if (typeof Pi === 'undefined') { toast('Open in Pi Browser for payments', 'e'); return; }
-  toast('Opening Pi payment...');
-  Pi.init({version:'2.0', sandbox:false});
+  if (!piUser) { toast('Please sign in to make payments'); return; }
+  if (piUser.isGuest) { toast('Sign in with Pi to make payments'); return; }
   Pi.createPayment({
     amount: amount,
     memo: memo,
