@@ -215,16 +215,17 @@ body {
 
 /* ── BOTTOM NAVIGATION ── */
 #nav {
-  height: 64px;
-  background: rgba(7,18,40,.97);
-  border-top: 1px solid var(--border);
+  height: 72px;
+  background: rgba(7,18,40,.98);
+  border-top: 1.5px solid var(--border-hi);
   display: flex;
   align-items: stretch;
   padding-bottom: env(safe-area-inset-bottom, 0);
   flex-shrink: 0;
   z-index: 10;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 -4px 24px rgba(0,0,0,.35);
 }
 .nb {
   flex: 1;
@@ -232,19 +233,19 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 4px;
   background: none;
   border: none;
-  color: var(--text-4);
-  font-size: 10px;
-  font-weight: 600;
+  color: rgba(240,246,255,.38);
+  font-size: 11px;
+  font-weight: 700;
   cursor: pointer;
   touch-action: manipulation;
-  padding: 8px 2px;
+  padding: 8px 4px;
   position: relative;
-  min-height: 56px;
+  min-height: 64px;
   transition: color var(--transition-fast);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
 }
 .nb.on { color: var(--accent); }
 .nb-pip {
@@ -257,19 +258,19 @@ body {
   background: var(--accent);
   border-radius: 0 0 4px 4px;
   transition: width var(--transition);
-  box-shadow: 0 1px 8px var(--accent-glow);
+  box-shadow: 0 1px 10px var(--accent-glow);
 }
-.nb.on .nb-pip { width: 28px; }
+.nb.on .nb-pip { width: 32px; }
 .nb-i {
-  font-size: 22px;
+  font-size: 26px;
   line-height: 1;
   transition: transform var(--transition-fast);
 }
 .nb.on .nb-i {
-  transform: scale(1.1);
+  transform: scale(1.12);
 }
 .nb:active .nb-i {
-  transform: scale(.88);
+  transform: scale(.84);
 }
 
 /* ── SCREEN BAR ── */
@@ -1129,11 +1130,11 @@ function renderHome(){
   el.innerHTML=out;
 }
 
-function hstat(val,lbl,fn){return '<div onclick="'+fn+'" style="background:var(--bg-surface);border:1.5px solid var(--border);border-radius:14px;padding:14px 6px;text-align:center;cursor:pointer;touch-action:manipulation;min-height:70px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px"><div style="font-size:22px;font-weight:800;line-height:1;color:var(--text-1)">'+val+'</div><div style="font-size:11px;color:var(--text-3);font-weight:600;letter-spacing:.04em">'+lbl+'</div></div>';}
-function hbtn(ico,ibg,lbl,fn){return '<div onclick="'+fn+'" style="background:var(--bg-surface);border:1.5px solid var(--border);border-radius:16px;padding:16px 8px;cursor:pointer;touch-action:manipulation;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:90px;text-align:center"><div style="width:46px;height:46px;border-radius:12px;background:'+ibg+';display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 2px 8px rgba(0,0,0,.2)">'+ico+'</div><div style="font-size:12px;font-weight:700;color:var(--text-1);line-height:1.3">'+lbl+'</div></div>';}
-function hrow(ico,ibg,t,s,fn){return '<div onclick="'+fn+'" style="background:var(--bg-surface);border:1.5px solid var(--border);border-radius:16px;padding:14px 16px;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;gap:14px;min-height:70px"><div style="width:46px;height:46px;border-radius:12px;background:'+ibg+';display:flex;align-items:center;justify-content:center;font-size:23px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.2)">'+ico+'</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--text-1);line-height:1.3">'+t+'</div><div style="font-size:12px;color:var(--text-3);margin-top:3px">'+s+'</div></div><div style="font-size:20px;color:var(--text-4);flex-shrink:0">&#x203A;</div></div>';}
-function qtool(ico,lbl,fn){return '<div onclick="'+fn+'" style="flex-shrink:0;background:var(--bg-surface);border:1.5px solid var(--border);border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer;touch-action:manipulation;min-width:76px;min-height:76px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px"><div style="font-size:26px;line-height:1">'+ico+'</div><div style="font-size:11px;font-weight:600;color:var(--text-2);line-height:1.2;white-space:nowrap">'+lbl+'</div></div>';}
-function csoon(ico,t,s){return '<div style="background:rgba(255,255,255,.025);border:1.5px solid var(--border);border-radius:16px;padding:16px;display:flex;align-items:center;gap:14px"><div style="font-size:28px;flex-shrink:0;opacity:.7">'+ico+'</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:var(--text-3)">'+t+'</div><div style="font-size:11px;color:var(--text-4);margin-top:3px">'+s+'</div><span class="badge-soon" style="margin-top:6px;display:inline-flex">&#x1F51C; SOON</span></div></div>';}
+function hstat(val,lbl,fn){return '<div onclick="'+fn+'" style="background:var(--bg-surface);border:2px solid var(--border);border-radius:16px;padding:16px 6px;text-align:center;cursor:pointer;touch-action:manipulation;min-height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;transition:transform .12s,background .12s" ><div style="font-size:26px;font-weight:900;line-height:1;color:var(--text-1)">'+val+'</div><div style="font-size:12px;color:var(--text-2);font-weight:700;letter-spacing:.02em">'+lbl+'</div></div>';}
+function hbtn(ico,ibg,lbl,fn){return '<div onclick="'+fn+'" style="background:var(--bg-surface);border:2px solid var(--border);border-radius:18px;padding:20px 10px;cursor:pointer;touch-action:manipulation;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:108px;text-align:center;transition:transform .12s,background .12s"><div style="width:54px;height:54px;border-radius:14px;background:'+ibg+';display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 4px 12px rgba(0,0,0,.25)">'+ico+'</div><div style="font-size:13px;font-weight:700;color:var(--text-1);line-height:1.3">'+lbl+'</div></div>';}
+function hrow(ico,ibg,t,s,fn){return '<div onclick="'+fn+'" style="background:var(--bg-surface);border:2px solid var(--border);border-radius:18px;padding:18px 18px;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;gap:16px;min-height:82px;transition:transform .12s,background .12s"><div style="width:54px;height:54px;border-radius:14px;background:'+ibg+';display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;box-shadow:0 4px 12px rgba(0,0,0,.25)">'+ico+'</div><div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700;color:var(--text-1);line-height:1.3">'+t+'</div><div style="font-size:12px;color:var(--text-2);margin-top:4px">'+s+'</div></div><div style="font-size:22px;color:var(--text-3);flex-shrink:0">&#x203A;</div></div>';}
+function qtool(ico,lbl,fn){return '<div onclick="'+fn+'" style="flex-shrink:0;background:var(--bg-surface);border:2px solid var(--border);border-radius:16px;padding:16px 12px;text-align:center;cursor:pointer;touch-action:manipulation;min-width:86px;min-height:88px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;transition:transform .12s,background .12s"><div style="font-size:30px;line-height:1">'+ico+'</div><div style="font-size:12px;font-weight:700;color:var(--text-1);line-height:1.2;white-space:nowrap">'+lbl+'</div></div>';}
+function csoon(ico,t,s){return '<div style="background:rgba(255,255,255,.03);border:2px solid var(--border);border-radius:18px;padding:18px;display:flex;align-items:center;gap:16px"><div style="font-size:32px;flex-shrink:0;opacity:.65">'+ico+'</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--text-3)">'+t+'</div><div style="font-size:12px;color:var(--text-4);margin-top:4px">'+s+'</div><span class="badge-soon" style="margin-top:8px;display:inline-flex">&#x1F51C; SOON</span></div></div>';}
 
 
 /* ══ NUCLEAR SW KILL — unregister everything, never re-register ══ */
