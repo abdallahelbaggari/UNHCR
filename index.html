@@ -12,6 +12,7 @@
 <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 <style>
 
+
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;font-family:system-ui,-apple-system,sans-serif;background:#091A3A;color:#F0F6FF}
 
@@ -139,6 +140,7 @@ html,body{height:100%;font-family:system-ui,-apple-system,sans-serif;background:
 #lmsg{font-size:.5rem;color:rgba(240,246,255,.38);margin-top:.65rem;min-height:16px;line-height:1.6}
 #login .note{font-size:.38rem;color:rgba(240,246,255,.18);margin-top:1.3rem;line-height:1.9;max-width:280px}
 
+
 </style>
 </head>
 <body>
@@ -198,7 +200,159 @@ html,body{height:100%;font-family:system-ui,-apple-system,sans-serif;background:
 </div>
 
 <div id="toast"></div>
-<script>/* ══ NUCLEAR SW KILL — unregister everything, never re-register ══ */
+<script>
+/* SW KILL */
+if('serviceWorker'in navigator){navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(s){s.unregister();});});}
+if('caches'in window){caches.keys().then(function(k){k.forEach(function(c){caches.delete(c);});});}
+
+/* BOOT */
+var piUser=null;
+var _APPROVE='/approve',_COMPLETE='/complete',_CANCEL='/cancel-payment';
+try{var _su=localStorage.getItem('unhcr_user');if(_su)piUser=JSON.parse(_su);}catch(e){}
+function onIncompletePayment(p){if(!p)return;var t='';try{t=(p.transaction&&p.transaction.txid)?p.transaction.txid:'';}catch(e){}var pid=p.identifier;if(t){fetch(_COMPLETE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentId:pid,txid:t})}).catch(function(){});}else{fetch(_CANCEL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentId:pid})}).catch(function(){});}}
+function piLogin(){var btn=document.getElementById('loginBtn'),txt=document.getElementById('signin-txt'),msg=document.getElementById('lmsg');if(btn){btn.disabled=true;btn.style.opacity='0.6';}if(txt)txt.textContent='Connecting...';if(msg)msg.textContent='Connecting to Pi Network...';if(typeof Pi==='undefined'){setTimeout(function(){piUser={username:'Pioneer'};try{localStorage.setItem('unhcr_user',JSON.stringify(piUser));}catch(e){}showApp();},600);return;}Pi.init({version:'2.0',sandbox:false});Pi.authenticate(['username','payments'],onIncompletePayment).then(function(auth){piUser=auth.user;try{localStorage.setItem('unhcr_user',JSON.stringify(piUser));}catch(e){}showApp();}).catch(function(err){if(btn){btn.disabled=false;btn.style.opacity='1';}if(txt)txt.textContent='Sign In with Pi';if(msg)msg.textContent='Sign in failed - tap to try again.';});}
+function guestLogin(){piUser={username:'guest',isGuest:true};try{localStorage.setItem('unhcr_user',JSON.stringify(piUser));}catch(e){}showApp();}
+function showApp(){var L=document.getElementById('login'),A=document.getElementById('app');if(L)L.style.display='none';if(A){A.style.display='flex';A.style.flexDirection='column';}var av=document.getElementById('hdr-av');if(av&&piUser&&piUser.username)av.textContent=piUser.username[0].toUpperCase();goTab('home',document.querySelector('.nb'));setTimeout(fetchCrisisAlerts,800);}
+function launchApp(){showApp();}
+function goTab(name,el){document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('on');});var scr=document.getElementById('scr-'+name);if(scr)scr.classList.add('on');if(el)el.classList.add('on');if(name==='home')renderHome();else if(name==='emergency')renderEmergency();else if(name==='resources')renderResources();else if(name==='community'||name==='volunteer')renderCommunity();else if(name==='wallet')renderWallet();else if(name==='myunhcr'||name==='profile')renderMyUNHCR();}
+function doLogout(){try{localStorage.removeItem('unhcr_user');}catch(e){}piUser=null;var L=document.getElementById('login'),A=document.getElementById('app');if(A)A.style.display='none';if(L)L.style.display='flex';var btn=document.getElementById('loginBtn'),txt=document.getElementById('signin-txt'),msg=document.getElementById('lmsg');if(btn){btn.disabled=false;btn.style.opacity='1';}if(txt)txt.textContent='Sign In with Pi';if(msg)msg.textContent='';}
+window.addEventListener('load',function(){if(piUser&&piUser.username){showApp();}});
+
+/* ═══ GLOBAL DATA — declared first, before all render functions ═══ */
+var _lang='English';
+var _mood=[];
+var _docs={};
+var _notices=[];
+var _saved=[];
+var _notes=[];
+var _downloads=[];
+var _emergContacts=[];
+var _txHistory=[];
+var _alertsList=[
+  {lv:'red',ico:'&#x1F6A8;',title:'Active Conflict Alert',body:'Heightened displacement risk in multiple regions.',tag:'CONFLICT'},
+  {lv:'orange',ico:'&#x26A0;&#xFE0F;',title:'Flood Warning',body:'Seasonal flooding reported across humanitarian zones.',tag:'FLOOD'},
+  {lv:'blue',ico:'&#x2139;&#xFE0F;',title:'Humanitarian Update',body:'New emergency resources added to the platform.',tag:'UPDATE'}
+];
+try{var _sm=localStorage.getItem('unhcr_mood');if(_sm)_mood=JSON.parse(_sm);}catch(e){}
+try{var _sd=localStorage.getItem('unhcr_docs');if(_sd)_docs=JSON.parse(_sd);}catch(e){}
+try{var _sn=localStorage.getItem('unhcr_notices');if(_sn)_notices=JSON.parse(_sn);}catch(e){}
+try{var _ss=localStorage.getItem('unhcr_saved');if(_ss)_saved=JSON.parse(_ss);}catch(e){}
+try{var _st=localStorage.getItem('unhcr_notes');if(_st)_notes=JSON.parse(_st);}catch(e){}
+try{var _se=localStorage.getItem('unhcr_contacts');if(_se)_emergContacts=JSON.parse(_se);}catch(e){}
+try{var _sx=localStorage.getItem('unhcr_tx');if(_sx)_txHistory=JSON.parse(_sx);}catch(e){}
+
+/* ═══ NAVIGATION HELPER ═══ */
+function navTo(tab){
+  var btns=document.querySelectorAll('.nb');
+  var map={home:0,emergency:1,resources:2,community:3,wallet:4,myunhcr:5};
+  goTab(tab,btns[map[tab]||0]);
+}
+
+/* ═══ RENDER HOME ═══ */
+function renderHome(){
+  var el=document.getElementById('home-scroll');
+  if(!el)return;
+  var name=piUser&&piUser.username?piUser.username:'Pioneer';
+  var h=new Date().getHours();
+  var greet=h<12?'Good Morning':h<17?'Good Afternoon':'Good Evening';
+  var today=new Date().toDateString();
+  var mA=Array.isArray(_mood)?_mood:[];
+  var tm=mA.filter(function(m){return m.date===today;})[0]||null;
+  var mE=tm?['&#x1F604;','&#x1F642;','&#x1F610;','&#x1F61F;','&#x1F622;'][tm.score]:'&#x1FA9C;';
+  var dS=(_docs&&typeof _docs==='object')?_docs:{};
+  var dc=Object.keys(dS).filter(function(k){return dS[k];}).length;
+  var dp=Math.round(dc/12*100);
+  var out='';
+
+  out+='<div style="padding:.65rem 1rem .3rem;display:flex;align-items:center;justify-content:space-between">';
+  out+='<div><div style="font-size:.42rem;color:rgba(240,246,255,.38)">'+greet+', <b style="color:rgba(240,246,255,.8)">@'+name+'</b></div>';
+  out+='<div style="font-size:.98rem;font-weight:900;line-height:1.15">Humanitarian Hub</div>';
+  out+='<div style="font-size:.38rem;color:rgba(240,246,255,.25);margin-top:.06rem">Independent information platform &middot; Pi Network</div></div>';
+  out+='<div style="display:flex;gap:.24rem">';
+  out+='<button onclick="openCrisisAlerts()" class="hdr-btn" style="position:relative">&#x1F6A8;<div class="notif-dot"></div></button>';
+  out+='<button onclick="openSearch()" class="hdr-btn">&#x1F50D;</button>';
+  out+='</div></div>';
+
+  out+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.28rem;padding:0 1rem;margin:.22rem 0">';
+  out+=hstat(mE,'Mood','openWellbeing()');
+  out+=hstat(dp+'%','Docs','openDocChecklist()');
+  out+='<div onclick="openCrisisAlerts()" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:.42rem .2rem;text-align:center;cursor:pointer;touch-action:manipulation"><div id="alert-count" style="font-size:.78rem;font-weight:800;color:#ef4444;line-height:1">&#x2022;&#x2022;&#x2022;</div><div style="font-size:.3rem;color:rgba(240,246,255,.28);margin-top:.05rem">Alerts</div></div>';
+  out+=hstat('&#x1F9EA;','Check','openSymptomChecker()');
+  out+='</div>';
+
+  out+='<div style="margin:.18rem 1rem;background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.14);border-radius:9px;padding:.4rem .7rem;font-size:.38rem;color:rgba(245,158,11,.65);line-height:1.75">&#x2139;&#xFE0F; <b>Independent application</b> — Not affiliated with, endorsed by, or operated by UNHCR or the United Nations.</div>';
+
+  out+='<div class="sh">&#x1F6A8; Emergency <span class="badge-now">AVAILABLE NOW</span></div>';
+  out+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.32rem;padding:0 1rem .2rem">';
+  out+=hbtn('&#x1F4DE;','rgba(239,68,68,.18)','Emergency Numbers','openEmergencyContacts()');
+  out+=hbtn('&#x1FA79;','rgba(239,68,68,.15)','First Aid','openFirstAid()');
+  out+=hbtn('&#x1F4CB;','rgba(239,68,68,.13)','Checklist','openEmergencyChecklist()');
+  out+=hbtn('&#x1F690;','rgba(239,68,68,.12)','Evacuation','openEvacuation()');
+  out+=hbtn('&#x1F9F0;','rgba(239,68,68,.11)','Preparedness','openPreparedness()');
+  out+=hbtn('&#x1F4F5;','rgba(239,68,68,.1)','Offline Info','openSOSCenter()');
+  out+='</div>';
+
+  out+='<div class="sh">&#x1F3E0; Find Help <span class="badge-now">AVAILABLE NOW</span></div>';
+  out+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:.35rem;padding:0 1rem .2rem">';
+  out+=hrow('&#x1F3E0;','rgba(245,158,11,.18)','Shelter','Emergency shelter contacts','openShelter()');
+  out+=hrow('&#x1FA7A;','rgba(16,185,129,.18)','Healthcare','Clinics & health info','openHealthcare()');
+  out+=hrow('&#x1F35E;','rgba(245,158,11,.14)','Food & Basic Needs','Assistance info','openResFood()');
+  out+=hrow('&#x1F4A7;','rgba(14,165,233,.15)','Water & Hygiene','WASH resources','openWASH()');
+  out+=hrow('&#x2696;&#xFE0F;','rgba(14,165,233,.18)','Legal & Rights','Rights & legal aid','openLegalAid()');
+  out+=hrow('&#x1F4DA;','rgba(124,58,237,.18)','Education','Learning resources','openEducation()');
+  out+='</div>';
+
+  out+='<div class="sh">&#x1F4DA; Quick Resources <span class="badge-now">AVAILABLE NOW</span></div>';
+  out+='<div style="display:flex;gap:.28rem;padding:0 1rem .2rem;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">';
+  out+=qtool('&#x1F32A;','Disasters','openDisasterCenter()');
+  out+=qtool('&#x1F9E0;','Mental Health','openMentalHealth()');
+  out+=qtool('&#x1F4AC;','Phrases','openPhraseCards()');
+  out+=qtool('&#x1F4CD;','Services','openServicesFinder()');
+  out+=qtool('&#x1F512;','Safety','openDigitalSafety()');
+  out+=qtool('&#x1F3AF;','Scam Alert','openScamAwareness()');
+  out+=qtool('&#x1F916;','AI Help','openAI()');
+  out+=qtool('&#x1F4D6;','Library','openHumLibrary()');
+  out+='</div>';
+
+  out+='<div class="sh">&#x1F91D; Community <span class="badge-now">AVAILABLE NOW</span></div>';
+  out+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.32rem;padding:0 1rem .2rem">';
+  out+=hbtn('&#x1F64B;','rgba(14,165,233,.16)','Volunteer','navTo("community")');
+  out+=hbtn('&#x1F465;','rgba(14,165,233,.13)','Groups','openCommunityGroups()');
+  out+=hbtn('&#x1F4CB;','rgba(14,165,233,.11)','Notices','openNoticeBoard()');
+  out+='</div>';
+
+  out+='<div class="sh">&#x1F50D; Find a Resource</div>';
+  out+='<div style="padding:0 1rem .3rem"><input class="srch-inp" placeholder="&#x1F50D; Search resources, services, guides..." oninput="searchRes(this.value)" style="width:100%"></div>';
+
+  out+='<div class="sh">&#x1F51C; Coming Soon <span class="badge-soon">COMING SOON</span></div>';
+  out+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:.3rem;padding:0 1rem .3rem">';
+  out+=csoon('&#x1F4CD;','Nearby Help (GPS)','Location-based finder');
+  out+=csoon('&#x1F916;','AI Humanitarian Assistant','Intelligent guidance');
+  out+=csoon('&#x1F5FA;&#xFE0F;','Humanitarian GIS Map','Geographic mapping');
+  out+=csoon('&#x1F4BC;','Jobs & Livelihoods','Employment support');
+  out+=csoon('&#x1F46A;','Family Reunification','Separated families');
+  out+=csoon('&#x1F331;','Climate & Resilience','Environmental resources');
+  out+='</div>';
+
+  out+='<div class="sh">&#x1F6A8; Crisis Alerts <span onclick="openCrisisAlerts()" style="font-size:.4rem;color:#0ea5e9;cursor:pointer;margin-left:auto;letter-spacing:0;text-transform:none;font-weight:700">View all &#x203A;</span></div>';
+  out+='<div style="padding:0 1rem"><div onclick="openCrisisAlerts()" style="background:rgba(239,68,68,.08);border:1.5px solid rgba(239,68,68,.2);border-radius:13px;padding:.78rem 1rem;cursor:pointer;touch-action:manipulation">';
+  out+='<div style="display:flex;gap:.42rem;align-items:flex-start"><div style="font-size:1rem;flex-shrink:0">&#x1F6A8;</div>';
+  out+='<div><div style="font-size:.56rem;font-weight:800;color:#fca5a5;margin-bottom:.08rem">Live Humanitarian Alerts</div>';
+  out+='<div style="font-size:.44rem;color:rgba(240,246,255,.46);line-height:1.72">Tap to view real-time crisis alerts from ReliefWeb (UN OCHA).</div>';
+  out+='</div></div></div></div>';
+  out+='<div style="height:80px"></div>';
+
+  el.innerHTML=out;
+}
+
+function hstat(val,lbl,fn){return '<div onclick="'+fn+'" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:.42rem .2rem;text-align:center;cursor:pointer;touch-action:manipulation"><div style="font-size:.78rem;font-weight:800;line-height:1">'+val+'</div><div style="font-size:.3rem;color:rgba(240,246,255,.28);margin-top:.05rem">'+lbl+'</div></div>';}
+function hbtn(ico,ibg,lbl,fn){return '<div onclick="'+fn+'" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:.6rem .4rem;cursor:pointer;touch-action:manipulation;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.18rem;min-height:68px;text-align:center"><div style="width:36px;height:36px;border-radius:9px;background:'+ibg+';display:flex;align-items:center;justify-content:center;font-size:1rem">'+ico+'</div><div style="font-size:.36rem;font-weight:700;color:rgba(240,246,255,.72);line-height:1.25">'+lbl+'</div></div>';}
+function hrow(ico,ibg,t,s,fn){return '<div onclick="'+fn+'" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:.62rem .75rem;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;gap:.48rem;min-height:58px"><div style="width:36px;height:36px;border-radius:9px;background:'+ibg+';display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0">'+ico+'</div><div><div style="font-size:.56rem;font-weight:700;color:#F0F6FF;line-height:1.25">'+t+'</div><div style="font-size:.37rem;color:rgba(240,246,255,.36);margin-top:.04rem">'+s+'</div></div></div>';}
+function qtool(ico,lbl,fn){return '<div onclick="'+fn+'" style="flex-shrink:0;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:.48rem .55rem;text-align:center;cursor:pointer;touch-action:manipulation;min-width:56px"><div style="font-size:1.05rem;line-height:1">'+ico+'</div><div style="font-size:.32rem;font-weight:600;color:rgba(240,246,255,.5);margin-top:.1rem;line-height:1.2">'+lbl+'</div></div>';}
+function csoon(ico,t,s){return '<div style="background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.055);border-radius:12px;padding:.6rem .72rem;display:flex;align-items:center;gap:.42rem"><div style="font-size:1rem;flex-shrink:0">'+ico+'</div><div><div style="font-size:.5rem;font-weight:600;color:rgba(240,246,255,.45)">'+t+'</div><div style="font-size:.34rem;color:rgba(240,246,255,.25);margin-top:.06rem">'+s+'</div><span class="badge-soon" style="margin-top:.1rem;display:inline-flex">&#x1F51C; SOON</span></div></div>';}
+
+
+/* ══ NUCLEAR SW KILL — unregister everything, never re-register ══ */
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then(function(regs) {
     regs.forEach(function(reg) { reg.unregister(); });
@@ -213,13 +367,13 @@ if ('caches' in window) {
 var piUser=null;
 var _APPROVE='/approve',_COMPLETE='/complete',_CANCEL='/cancel-payment';
 try{var _s=localStorage.getItem('unhcr_user');if(_s)piUser=JSON.parse(_s);}catch(e){}
-function onIncompletePayment(p){if(!p)return;var t='';try{t=(p.transaction&&p.transaction.txid)?p.transaction.txid:'';}catch(e){}var pid=p.identifier;if(t){fetch(_COMPLETE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentId:pid,txid:t})}).catch(function(){});}else{fetch(_CANCEL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentId:pid})}).catch(function(){});}}
-function piLogin(){var btn=document.getElementById('loginBtn'),txt=document.getElementById('signin-txt'),msg=document.getElementById('lmsg');if(btn){btn.disabled=true;btn.style.opacity='0.6';}if(txt)txt.textContent='Connecting...';if(msg)msg.textContent='Connecting to Pi Network...';if(typeof Pi==='undefined'){setTimeout(function(){piUser={username:'Pioneer'};try{localStorage.setItem('unhcr_user',JSON.stringify(piUser));}catch(e){}showApp();},600);return;}Pi.init({version:'2.0',sandbox:false});Pi.authenticate(['username','payments'],onIncompletePayment).then(function(auth){piUser=auth.user;try{localStorage.setItem('unhcr_user',JSON.stringify(piUser));}catch(e){}showApp();}).catch(function(err){if(btn){btn.disabled=false;btn.style.opacity='1';}if(txt)txt.textContent='Sign In with Pi';if(msg)msg.textContent='Sign in failed - tap to try again.';});}
-function guestLogin(){piUser={username:'guest',isGuest:true};try{localStorage.setItem('unhcr_user',JSON.stringify(piUser));}catch(e){}showApp();}
-function showApp(){var L=document.getElementById('login'),A=document.getElementById('app');if(L)L.style.display='none';if(A){A.style.display='flex';A.style.flexDirection='column';}var av=document.getElementById('hdr-av');if(av&&piUser&&piUser.username)av.textContent=piUser.username[0].toUpperCase();goTab('home',document.querySelector('.nb'));setTimeout(fetchCrisisAlerts,800);}
-function launchApp(){showApp();}
-function goTab(name,el){document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('on');});var scr=document.getElementById('scr-'+name);if(scr)scr.classList.add('on');if(el)el.classList.add('on');if(name==='home')renderHome();else if(name==='emergency')renderEmergency();else if(name==='resources')renderResources();else if(name==='community'||name==='volunteer')renderCommunity();else if(name==='wallet')renderWallet();else if(name==='myunhcr'||name==='profile')renderMyUNHCR();}
-function doLogout(){try{localStorage.removeItem('unhcr_user');}catch(e){}piUser=null;var L=document.getElementById('login'),A=document.getElementById('app');if(A)A.style.display='none';if(L)L.style.display='flex';var btn=document.getElementById('loginBtn'),txt=document.getElementById('signin-txt'),msg=document.getElementById('lmsg');if(btn){btn.disabled=false;btn.style.opacity='1';}if(txt)txt.textContent='Sign In with Pi';if(msg)msg.textContent='';}
+
+
+
+
+
+
+
 window.addEventListener('load',function(){if(piUser&&piUser.username){showApp();}});
 
 
@@ -1151,11 +1305,7 @@ var _svcs_db={
   ]
 };
 
-var _alertsList=[
-  {lv:'red',ico:'\ud83d\udea8',title:'Active Conflict Alert',body:'Heightened displacement risk in multiple regions. Emergency shelters activated. Follow official guidance.',tag:'URGENT'},
-  {lv:'orange',ico:'\u26a0\ufe0f',title:'Seasonal Flood Warning',body:'Flooding affecting riverside and coastal communities. Prepare evacuation plans now.',tag:'WARNING'},
-  {lv:'blue',ico:'\u2139\ufe0f',title:'Vaccination Campaign Active',body:'Free vaccinations underway in multiple regions. Visit your nearest health center.',tag:'HEALTH'},
-];
+
 var _piLang='English';
 
 /* LOAD */
@@ -2790,6 +2940,7 @@ function submitFeedback(){
   closeP();
   toast('Feedback prepared - check your email app','s');
 }
+
 </script>
 </body>
 </html>
