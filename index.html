@@ -970,13 +970,17 @@ body {
 </div>
 
 <div id="toast"></div>
-<script>
+<script>/* ══ SW KILL ══ */
 if('serviceWorker'in navigator){navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(s){s.unregister();});});}
 if('caches'in window){caches.keys().then(function(k){k.forEach(function(c){caches.delete(c);});});}
-var piUser=null;
-var _APPROVE='/approve',_COMPLETE='/complete',_CANCEL='/cancel-payment';
+
+/* ══ COPA EXACT PAYMENT ENGINE ══ */
+var piUser = null;
+var _APPROVE  = '/approve';
+var _COMPLETE = '/complete';
+var _CANCEL   = '/cancel-payment';
 try{var _su=localStorage.getItem('unhcr_user');if(_su)piUser=JSON.parse(_su);}catch(e){}
-function onIncompletePayment(p){if(!p)return;var t='';try{t=(p.transaction&&p.transaction.txid)?p.transaction.txid:'';}catch(e){}var pid=p.identifier;if(t){fetch(_COMPLETE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentId:pid,txid:t})}).catch(function(){});}else{fetch(_CANCEL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentId:pid})}).catch(function(){});}}
+
 function piLogin() {
   var btn=document.getElementById('loginBtn'),txt=document.getElementById('signin-txt'),msg=document.getElementById('lmsg');
   if(btn){btn.disabled=true;btn.style.opacity='0.6';}
@@ -1003,11 +1007,91 @@ function piLogin() {
       if(msg)msg.textContent='Sign in failed — tap to try again.';
     });
 }
-function guestLogin(){piUser={username:'guest',isGuest:true};try{localStorage.setItem('unhcr_user',JSON.stringify(piUser));}catch(e){}showApp();}
-function showApp(){
-  if(typeof Pi!=='undefined'){
-    Pi.init({version:'2.0', sandbox:false});
+
+function guestLogin(){
+  piUser={username:'guest',isGuest:true};
+  try{localStorage.setItem('unhcr_user',JSON.stringify(piUser));}catch(e){}
+  showApp();
+}
+
+function onIncompletePayment(payment){
+  if(!payment)return;
+  var txid='';
+  try{txid=(payment.transaction&&payment.transaction.txid)?payment.transaction.txid:'';}catch(e){}
+  var pid=payment.identifier;
+  if(txid){
+    fetch(_COMPLETE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentId:pid,txid:txid})})
+      .then(function(r){return r.json();})
+      .then(function(d){console.log('[HumHub] Completed:',d);})
+      .catch(function(e){console.warn('[HumHub] Complete error:',e);});
+  } else {
+    fetch(_CANCEL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentId:pid})})
+      .then(function(r){return r.json();})
+      .then(function(d){console.log('[HumHub] Cancelled:',d);})
+      .catch(function(e){console.warn('[HumHub] Cancel error:',e);});
   }
+}
+
+/* ══ COPA EXACT Pi.createPayment ══ */
+function submitPiPayment(amount, memo){
+  if(!piUser){toast('Please sign in to make payments');return;}
+  if(piUser.isGuest){toast('Sign in with Pi to make payments');return;}
+  Pi.createPayment({
+    amount: amount,
+    memo: memo,
+    metadata: {app:'HumHub', type:'humanitarian', user:piUser.username, ts:Date.now()},
+  },{
+    onReadyForServerApproval: function(paymentId){
+      fetch(_APPROVE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentId:paymentId})})
+        .then(function(r){return r.json();})
+        .then(function(d){console.log('[HumHub] Approved:',d);})
+        .catch(function(e){console.warn('[HumHub] Approve error:',e);});
+    },
+    onReadyForServerCompletion: function(paymentId, txid){
+      fetch(_COMPLETE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentId:paymentId,txid:txid})})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          _txHistory.push({id:paymentId,txid:txid,amount:amount,memo:memo,type:'out',date:new Date().toISOString()});
+          saveTx();
+          toast('Payment complete — thank you!','s');
+          setTimeout(function(){renderWallet();},800);
+        })
+        .catch(function(e){console.warn('[HumHub] Complete error:',e);});
+    },
+    onCancel: function(paymentId){
+      fetch(_CANCEL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentId:paymentId})})
+        .catch(function(){});
+      toast('Payment cancelled');
+    },
+    onError: function(error,payment){
+      console.error('[HumHub] Payment error:',error,payment);
+      toast('Payment error — please try again','e');
+    },
+  });
+}
+
+function donatePi(amount){
+  closeP();
+  submitPiPayment(amount,'Humanitarian Community Contribution');
+}
+
+function donatePiCustom(){
+  var el=document.getElementById('donate-amt');
+  var amt=parseFloat(el&&el.value||0);
+  if(!amt||amt<0.01){toast('Enter a valid amount','e');return;}
+  closeP();
+  submitPiPayment(amt,'Humanitarian Community Contribution');
+}
+
+function submitPayment(){
+  var amt=parseFloat((document.getElementById('pay-amt')&&document.getElementById('pay-amt').value)||0);
+  var memo=(document.getElementById('pay-memo')&&document.getElementById('pay-memo').value)||'Humanitarian contribution';
+  if(!amt||amt<0.01){toast('Enter a valid amount','e');return;}
+  closeP();
+  submitPiPayment(amt,memo);
+}
+
+function showApp(){
   var L=document.getElementById('login'),A=document.getElementById('app');
   if(L)L.style.display='none';
   if(A){A.style.display='flex';A.style.flexDirection='column';}
@@ -1016,9 +1100,47 @@ function showApp(){
   goTab('home',document.querySelector('.nb'));
   setTimeout(fetchCrisisAlerts,800);
 }
+
 function launchApp(){showApp();}
-function goTab(name,el){document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('on');});var scr=document.getElementById('scr-'+name);if(scr)scr.classList.add('on');if(el)el.classList.add('on');if(name==='home')renderHome();else if(name==='emergency')renderEmergency();else if(name==='resources')renderResources();else if(name==='community'||name==='volunteer')renderCommunity();else if(name==='wallet')renderWallet();else if(name==='myunhcr'||name==='profile')renderMyUNHCR();}
-function doLogout(){try{localStorage.removeItem('unhcr_user');}catch(e){}piUser=null;var L=document.getElementById('login'),A=document.getElementById('app');if(A)A.style.display='none';if(L)L.style.display='flex';var btn=document.getElementById('loginBtn'),txt=document.getElementById('signin-txt'),msg=document.getElementById('lmsg');if(btn){btn.disabled=false;btn.style.opacity='1';}if(txt)txt.textContent='Sign In with Pi';if(msg)msg.textContent='';}
+
+function goTab(name,el){
+  document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});
+  document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('on');});
+  var scr=document.getElementById('scr-'+name);if(scr)scr.classList.add('on');
+  if(el)el.classList.add('on');
+  if(name==='home')renderHome();
+  else if(name==='emergency')renderEmergency();
+  else if(name==='resources')renderResources();
+  else if(name==='community'||name==='volunteer')renderCommunity();
+  else if(name==='wallet')renderWallet();
+  else if(name==='myunhcr'||name==='profile')renderMyUNHCR();
+}
+
+function doLogout(){
+  try{localStorage.removeItem('unhcr_user');}catch(e){}
+  piUser=null;
+  var L=document.getElementById('login'),A=document.getElementById('app');
+  if(A)A.style.display='none';
+  if(L)L.style.display='flex';
+  var btn=document.getElementById('loginBtn'),txt=document.getElementById('signin-txt'),msg=document.getElementById('lmsg');
+  if(btn){btn.disabled=false;btn.style.opacity='1';}
+  if(txt)txt.textContent='Sign In with Pi';
+  if(msg)msg.textContent='';
+}
+
+window.addEventListener('load',function(){
+  if(piUser&&piUser.username){showApp();}
+});
+
+
+
+
+
+
+
+
+
+
 window.addEventListener('load',function(){if(piUser&&piUser.username){showApp();}});
 
 
@@ -1265,8 +1387,6 @@ function openResFood(){
 ================================================================ */
 var piUser    = null;
 var _APPROVE  = '/approve';
-var _COMPLETE = '/complete';
-var _CANCEL   = '/cancel-payment';
 try{var _s=localStorage.getItem('unhcr_user');if(_s)piUser=JSON.parse(_s);}catch(e){}
 
 
@@ -1606,16 +1726,16 @@ function renderMyUNHCR(){
       +prow('&#x1F310;','rgba(14,165,233,.16)','Language Settings','Change display language','openLang()')
       +prow('&#x1F4CB;','rgba(255,255,255,.08)','Privacy Policy','How we handle your data','openPrivacyInfo()')
       +prow('&#x26A0;&#xFE0F;','rgba(245,158,11,.14)','Disclaimer','Independent platform notice','openDisclaimer()')
-      +prow('&#x2139;&#xFE0F;','rgba(14,165,233,.14)','About UNHCR','Platform information','openAbout()')
+      +prow('&#x2139;&#xFE0F;','rgba(14,165,233,.14)','About Humanitarian Hub','Platform information','openAbout()')
     +'</div>'
     +'<div style="padding:0 1rem .2rem">'
-      +csrow('&#x1F514;','Notification Center','Manage your alerts')
+      +csrow('&#x1F514;','Notifications','Manage your alerts')
       +csrow('&#x267F;','Accessibility Controls','Text size, contrast & voice')
       +csrow('&#x1F510;','Privacy Dashboard','Control your data')
     +'</div>'
 
     +'<div style="padding:.6rem 1rem"><button onclick="doLogout()" style="width:100%;padding:.8rem;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:12px;color:#ef4444;font-size:.82rem;font-weight:600;min-height:48px;cursor:pointer;touch-action:manipulation">Sign Out</button></div>'
-    +'<div style="font-size:.4rem;color:rgba(240,246,255,.13);text-align:center;padding:0 1rem 1rem;line-height:2">&copy; 2026 UNHCR Community Platform &middot; Not affiliated with UN or UNHCR</div>'
+    +'<div style="font-size:.4rem;color:rgba(240,246,255,.13);text-align:center;padding:0 1rem 1rem;line-height:2">&copy; 2026 Humanitarian Hub &middot; Independent platform &middot; Not affiliated with UNHCR</div>'
     +'<div style="height:90px"></div>';
 }
 
@@ -1635,230 +1755,73 @@ function csrow(ico,t,s){
     +'</div></div>';
 }
 
-function renderWallet() {
-  var name = piUser && piUser.username ? piUser.username : 'Pioneer';
-  var isGuest = piUser && piUser.isGuest;
-  var txHtml = _txHistory.length ? _txHistory.slice().reverse().map(function(tx) {
-    var isIn = tx.type === 'in';
-    return '<div class="tx-item">'
-      + '<div class="tx-ico" style="background:' + (isIn ? 'rgba(16,185,129,.15)' : 'rgba(14,165,233,.15)') + ';width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">'
-      + (isIn ? '&#x2B07;&#xFE0F;' : '&#x2B06;&#xFE0F;') + '</div>'
-      + '<div class="tx-body" style="flex:1;min-width:0"><div class="tx-title" style="font-size:14px;font-weight:700">' + escHtml(tx.memo) + '</div>'
-      + '<div class="tx-date" style="font-size:11px;margin-top:3px"> ' + new Date(tx.date).toLocaleDateString() + '</div></div>'
-      + '<div class="tx-amount ' + (isIn ? 'tx-pos' : 'tx-neg') + '" style="font-size:15px;font-weight:800;flex-shrink:0">'
-      + (isIn ? '+' : '-') + tx.amount + ' π</div>'
-      + '</div>';
-  }).join('') : '<div style="text-align:center;padding:1.5rem;font-size:.58rem;color:rgba(240,246,255,.3)">No transactions yet</div>';
+function renderWallet(){
+  var el=document.getElementById('wallet-scroll');
+  if(!el)return;
+  var name=piUser&&piUser.username?piUser.username:'Pioneer';
+  var isGuest=piUser&&piUser.isGuest;
+  el.innerHTML=
 
-  document.getElementById('wallet-scroll').innerHTML =
-    /* Balance card */
-    '<div class="bal-card">'
-      + '<div class="bal-shine"></div><div class="bal-shine2"></div>'
-      + '<div class="bal-label">Pi Wallet</div>'
-      + '<div class="bal-amount">Balance unavailable</div>'
-      + '<div class="bal-sub">@' + name + ' · Pi Mainnet</div>'
-    + '</div>'
+  /* Balance card */
+  '<div class="bal-card">'
+    +'<div class="bal-label">PAYMENTS</div>'
+    +'<div class="bal-amount">Balance unavailable</div>'
+    +'<div class="bal-sub">Pi balance managed by Pi Network &middot; @'+name+'</div>'
+  +'</div>'
 
-    /* Action buttons */
-    + '<div class="w-actions">'
-      + '<div class="w-action" onclick="openPayPi()">'
-        + '<div class="w-action-ico">&#x2B06;&#xFE0F;</div>'
-        + '<div class="w-action-t">Pay with Pi</div>'
-        + '<div class="w-action-s">Send Pi to support humanitarian services</div>'
-      + '</div>'
-      + '<div class="w-action" onclick="openDonatePi()">'
-        + '<div class="w-action-ico">&#x1F90D;</div>'
-        + '<div class="w-action-t">Donate</div>'
-        + '<div class="w-action-s">Contribute Pi to the UNHCR community fund</div>'
-      + '</div>'
-    + '</div>'
+  /* Pi NOT a wallet notice */
+  +'<div style="margin:0 16px 12px;background:rgba(14,165,233,.06);border:1px solid rgba(14,165,233,.15);border-radius:12px;padding:12px 14px;font-size:12px;color:rgba(240,246,255,.55);line-height:1.75">'
+    +'&#x2139;&#xFE0F; Pi balance is managed by the Pi app. This platform processes Pi payments for community contributions only. We never store passphrases, seed phrases, or private keys.'
+  +'</div>'
 
-    /* Pi SDK note */
-    + '<div style="margin:.2rem 1rem .5rem;background:rgba(14,165,233,.07);border:1px solid rgba(14,165,233,.15);border-radius:10px;padding:.5rem .75rem;font-size:.44rem;color:rgba(240,246,255,.45);line-height:1.75">'
-      + '&#x1F512; Pi wallet balance is managed by the Pi Network. This app uses the official Pi SDK for payments only. We never store your Pi passphrase or private key.'
-    + '</div>'
+  /* Action buttons */
+  +(isGuest
+    ?'<div style="margin:0 16px 12px;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:14px;padding:18px;text-align:center"><div style="font-size:15px;font-weight:700;color:rgba(245,158,11,.85);margin-bottom:8px">&#x1F510; Sign In Required</div><div style="font-size:13px;color:var(--text-3);margin-bottom:14px">Sign in with Pi to make payments</div><button class="btn-p" onclick="doLogout()" style="min-height:52px;font-size:16px">Sign In with Pi</button></div>'
+    :'<div class="w-actions">'
+      +'<div class="w-action" onclick="openPayPi()">'
+        +'<div class="wi">&#x2B06;&#xFE0F;</div>'
+        +'<div class="wt">Pay with Pi</div>'
+        +'<div class="ws">Send Pi payment</div>'
+      +'</div>'
+      +'<div class="w-action" onclick="openDonatePi()">'
+        +'<div class="wi">&#x2764;&#xFE0F;</div>'
+        +'<div class="wt">Donate Pi</div>'
+        +'<div class="ws">Support the platform</div>'
+      +'</div>'
+    +'</div>'
+    /* Quick donate */
+    +'<div style="padding:0 16px 12px">'
+      +'<div class="sh" style="padding:0 0 10px">Quick Donation</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px">'
+        +'<button onclick="donatePi(1)" class="btn-o" style="min-height:56px;font-size:20px;font-weight:900;border-radius:14px">&#x03C0;1</button>'
+        +'<button onclick="donatePi(5)" class="btn-p" style="min-height:56px;font-size:20px;font-weight:900;border-radius:14px">&#x03C0;5</button>'
+        +'<button onclick="donatePi(10)" class="btn-o" style="min-height:56px;font-size:20px;font-weight:900;border-radius:14px">&#x03C0;10</button>'
+        +'<button onclick="openCustomDonate()" class="btn-o" style="min-height:56px;font-size:13px;font-weight:700;border-radius:14px">Custom</button>'
+      +'</div>'
+    +'</div>'
+  )
 
-    /* Transaction history */
-    + '<div class="sec">Transaction History</div>'
-    + '<div class="tx-list">'
-      + txHtml
-    + '</div>'
-
-    /* Donate section */
-    + '<div class="sec" style="margin-top:.5rem">Support Humanitarian Work</div>'
-    + '<div class="donate-card">'
-      + '<div style="font-size:.62rem;font-weight:800;color:#10b981;margin-bottom:.3rem">&#x1F90D; Donate Pi</div>'
-      + '<div style="font-size:.5rem;color:rgba(240,246,255,.6);line-height:1.8;margin-bottom:.6rem">Support humanitarian information services. Contributions support this independent humanitarian platform and its community resources.</div>'
-      + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.4rem;margin-bottom:.6rem">'
-        + '<button onclick="donatePi(1)" style="background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.3);border-radius:10px;padding:.5rem;color:#10b981;font-size:.65rem;font-weight:800;cursor:pointer;min-height:44px">π 1</button>'
-        + '<button onclick="donatePi(5)" style="background:rgba(16,185,129,.2);border:1.5px solid rgba(16,185,129,.4);border-radius:10px;padding:.5rem;color:#10b981;font-size:.65rem;font-weight:800;cursor:pointer;min-height:44px">π 5</button>'
-        + '<button onclick="donatePi(10)" style="background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.3);border-radius:10px;padding:.5rem;color:#10b981;font-size:.65rem;font-weight:800;cursor:pointer;min-height:44px">π 10</button>'
-      + '</div>'
-      + '<button onclick="openCustomDonate()" style="width:100%;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.22);border-radius:10px;padding:.6rem;color:#10b981;font-size:.58rem;font-weight:700;cursor:pointer;min-height:44px">Custom Amount</button>'
-    + '</div>'
-    + '<div style="height:90px"></div>';
-
-  /* Try to get Pi balance via SDK */
-  if (typeof Pi !== 'undefined' && !isGuest) {}
+  /* Transaction history */
+  +'<div class="sh">&#x1F4CB; Transaction History</div>'
+  +(_txHistory.length===0
+    ?'<div style="text-align:center;padding:32px 16px;color:var(--text-4);font-size:13px">No transactions yet</div>'
+    :_txHistory.slice().reverse().map(function(tx){
+      return '<div class="tx-item">'
+        +'<div class="tx-ico" style="background:rgba(14,165,233,.15)">&#x1F4B0;</div>'
+        +'<div style="flex:1;min-width:0">'
+          +'<div class="tx-t">'+tx.memo+'</div>'
+          +'<div class="tx-d">'+new Date(tx.date).toLocaleDateString()+' &middot; Status: Completed</div>'
+        +'</div>'
+        +'<div class="tx-a tx-neg">&#x2212;&#x03C0;'+tx.amount+'</div>'
+      +'</div>';
+    }).join('')
+  )
+  +'<div style="height:90px"></div>';
 }
-
-
-
-/* ============================================================
-   UNHCR v1.0 — Mainnet — sandbox:false
-   Login pattern: Copa index__10_.html exact
-============================================================ */
-
-/* Global vars — declared FIRST */
-var piUser    = null;
-var _APPROVE  = '/approve';
-var _COMPLETE = '/complete';
-var _CANCEL   = '/cancel-payment';
-
-/* Load stored session */
-try {
-  var _s = localStorage.getItem('unhcr_user');
-  if (_s) piUser = JSON.parse(_s);
-} catch(e) {}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* Boot — runs after page loads */
-window.addEventListener('load', function() {
-  /* Session already loaded at top — check if valid */
-  if (piUser && piUser.username) {
-    showApp();
-  }
-  /* Otherwise login screen is already visible — user taps button */
-});
-
-
-
-/* ================================================================
-   UNHCR LOGIN — Copa uploaded pattern (index__10_.html)
-   Visible login screen, button always clickable
-   Falls back to demo if no Pi SDK
-================================================================ */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* ================================================================
-   UNHCR — JavaScript Engine
-   MAINNET · sandbox:false · Cloudflare Pages
-   Copa login pattern — exact copy
-================================================================ */
-
-/* ── PI SDK ── */
-
-
-
-
-/* Copa exact hideSplash */
-
-
-/* Copa exact onIncompletePayment */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* ══ COPA EXACT PATTERN ══ */
-
-
-
-
-/* Copa exact hideSplash */
-
-
-/* Copa exact onIncompletePayment */
-
-
-/* Copa exact piLogin — Pi.init inside, .catch ALSO hides splash */
-
-
-/* Copa exact window load */
-
-
-
-
-/* Copa exact hideSplash */
-
-
-/* Copa exact onIncompletePayment */
-
-
-/* Copa exact piLogin — Pi.init inside, .catch also hides splash */
-
-
-/* Guest — no Pi needed */
-
-
-/* Copa exact window load */
-
-
-
-if ('serviceWorker' in navigator) {
-  /* First: unregister ALL existing service workers to clear old cache */
-  navigator.serviceWorker.getRegistrations().then(function(regs) {
-    regs.forEach(function(reg) { reg.unregister(); });
-  });
-  /* Then: clear all caches */
-  if ('caches' in window) {
-    caches.keys().then(function(keys) {
-      keys.forEach(function(k) { caches.delete(k); });
-    });
-  }
-  /* Then register fresh SW after short delay */
-  
-}
-
 function openAI() {
   var msgs = '<div id="ai-msgs" style="min-height:120px;max-height:300px;overflow-y:auto;margin-bottom:.55rem">'
     +'<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px 10px 10px 2px;padding:.65rem .8rem;margin-bottom:.35rem;font-size:.54rem;color:rgba(240,246,255,.6);line-height:1.8">'
-    +'&#x1F916; Hello! I am the UNHCR AI Assistant, powered by Claude.<br>'
+    +'&#x1F916; Hello! I am the Humanitarian Hub AI Assistant, powered by Claude.<br>'
     +'I can help with: &#x1F6A8; Emergency &bull; &#x1FA7A; Health &bull; &#x1F3E0; Shelter &bull; &#x2696;&#xFE0F; Legal &bull; &#x1F4DA; Education<br><br>'
     +'For immediate emergencies always call <b>112</b>.'
     +'</div></div>';
@@ -3565,67 +3528,14 @@ function openDonatePi() {
 }
 function openCustomDonate(){openDonatePi();}
 
-function donatePi(amount) {
-  if (typeof Pi === 'undefined') { toast('Open in Pi Browser to make payments', 'e'); return; }
-  if (!piUser || piUser.isGuest) { toast('Sign in with Pi to make payments', 'e'); return; }
-  submitPiPayment(amount, 'Humanitarian Community Contribution');
-}
 
-function donatePiCustom() {
-  var el = document.getElementById('donate-amt');
-  var amt = parseFloat(el && el.value || 0);
-  if (!amt || amt < 0.01) { toast('Enter a valid amount', 'e'); return; }
-  closeP();
-  donatePi(amt);
-}
 
-function submitPayment() {
-  var aEl = document.getElementById('pay-amt');
-  var mEl = document.getElementById('pay-memo');
-  var amt = parseFloat(aEl && aEl.value || 0);
-  var memo = (mEl && mEl.value) || 'Humanitarian Contribution';
-  if (!amt || amt < 0.01) { toast('Enter a valid amount', 'e'); return; }
-  closeP();
-  donatePi(amt);
-}
+
+
+
 
 /* ══ Pi.createPayment — Copa exact ══ */
-function submitPiPayment(amount, memo) {
-  if (!piUser) { toast('Please sign in to make payments'); return; }
-  if (piUser.isGuest) { toast('Sign in with Pi to make payments'); return; }
-  Pi.createPayment({
-    amount: amount,
-    memo: memo,
-    metadata: {app:'HumHub', type:'humanitarian', user:piUser.username, ts:Date.now()},
-  }, {
-    onReadyForServerApproval: function(paymentId) {
-      fetch(_APPROVE, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({paymentId:paymentId})})
-        .then(function(r){return r.json();})
-        .then(function(d){console.log('[HumHub] Approved:',d);})
-        .catch(function(e){console.warn('[HumHub] Approve error:',e);});
-    },
-    onReadyForServerCompletion: function(paymentId, txid) {
-      fetch(_COMPLETE, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({paymentId:paymentId, txid:txid})})
-        .then(function(r){return r.json();})
-        .then(function(d){
-          _txHistory.push({id:paymentId, txid:txid, amount:amount, memo:memo, type:'out', date:new Date().toISOString()});
-          saveTx();
-          toast('Payment complete — thank you!', 's');
-          setTimeout(function(){renderWallet();}, 800);
-        })
-        .catch(function(e){console.warn('[HumHub] Complete error:',e);});
-    },
-    onCancel: function(paymentId) {
-      fetch(_CANCEL, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({paymentId:paymentId})})
-        .catch(function(){});
-      toast('Payment cancelled');
-    },
-    onError: function(error, payment) {
-      console.error('[HumHub] Payment error:', error, payment);
-      toast('Payment error — please try again', 'e');
-    },
-  });
-}
+
 function escHtml(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
@@ -3708,6 +3618,46 @@ function submitFeedback(){
 }
 
 
+
+function askAI() {
+  var inp = document.getElementById('ai-inp');
+  var q = inp ? inp.value.trim() : '';
+  if (!q) return;
+  inp.value = '';
+  var msgs = document.getElementById('ai-msgs');
+  if (msgs) {
+    msgs.innerHTML += '<div style="background:rgba(14,165,233,.12);border-radius:10px 10px 2px 10px;padding:10px 12px;margin-bottom:8px;font-size:13px;color:var(--text-1);line-height:1.7;text-align:right">' + q + '</div>';
+    msgs.innerHTML += '<div id="ai-typing" style="background:rgba(255,255,255,.05);border-radius:10px 10px 10px 2px;padding:10px 12px;margin-bottom:8px;font-size:13px;color:var(--text-2);line-height:1.7">&#x1F916; Thinking...</div>';
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+  fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': '',
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 512,
+      system: 'You are a humanitarian assistance guide for the Humanitarian Hub app. Provide clear, compassionate, accurate guidance on emergency procedures, humanitarian resources, legal rights, healthcare, shelter, education, and safety. Be concise and practical. Always recommend seeking professional help for medical, legal, and emergency situations.',
+      messages: [{role: 'user', content: q}]
+    })
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var typing = document.getElementById('ai-typing');
+    var reply = (d.content && d.content[0] && d.content[0].text) ? d.content[0].text : 'I am unable to respond right now. Please try again.';
+    if (typing) typing.outerHTML = '<div style="background:rgba(255,255,255,.05);border-radius:10px 10px 10px 2px;padding:10px 12px;margin-bottom:8px;font-size:13px;color:var(--text-2);line-height:1.7">&#x1F916; ' + reply + '</div>';
+    var m2 = document.getElementById('ai-msgs');
+    if (m2) m2.scrollTop = m2.scrollHeight;
+  })
+  .catch(function(){
+    var typing = document.getElementById('ai-typing');
+    if (typing) typing.outerHTML = '<div style="background:rgba(255,255,255,.05);border-radius:10px 10px 10px 2px;padding:10px 12px;margin-bottom:8px;font-size:13px;color:var(--text-3);line-height:1.7">&#x1F916; Connection error. Please check your internet and try again.</div>';
+  });
+}
 </script>
 </body>
 </html>
