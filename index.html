@@ -1816,7 +1816,7 @@ function renderWallet(){
       +'</div>';
     }).join('')
   )
-  +'<div style="height:90px"></div>';
+  +'<div style="text-align:center;padding:12px"><button onclick="testPaymentEndpoints()" style="background:none;border:none;color:var(--text-4);font-size:11px;cursor:pointer;text-decoration:underline">&#x1F527; Test payment endpoints</button></div>'+'<div style="height:90px"></div>';
 }
 function openAI() {
   var msgs = '<div id="ai-msgs" style="min-height:120px;max-height:300px;overflow-y:auto;margin-bottom:.55rem">'
@@ -3656,6 +3656,53 @@ function askAI() {
   .catch(function(){
     var typing = document.getElementById('ai-typing');
     if (typing) typing.outerHTML = '<div style="background:rgba(255,255,255,.05);border-radius:10px 10px 10px 2px;padding:10px 12px;margin-bottom:8px;font-size:13px;color:var(--text-3);line-height:1.7">&#x1F916; Connection error. Please check your internet and try again.</div>';
+  });
+}
+
+/* ══ PAYMENT DIAGNOSTICS ══ */
+function testPaymentEndpoints() {
+  toast('Testing payment endpoints...');
+  var results = [];
+  
+  fetch('/approve', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({paymentId:'TEST_DIAGNOSTIC'})
+  })
+  .then(function(r){
+    var status = r.status;
+    return r.json().then(function(d){
+      results.push('Approve: HTTP '+status+' → '+JSON.stringify(d));
+      return fetch('/complete', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({paymentId:'TEST',txid:'TEST'})
+      });
+    });
+  })
+  .then(function(r2){
+    var status2 = r2.status;
+    return r2.json().then(function(d2){
+      results.push('Complete: HTTP '+status2+' → '+JSON.stringify(d2));
+      openP('&#x1F527; Payment Diagnostics',
+        '<div style="font-size:13px;color:var(--text-1);margin-bottom:12px;font-weight:700">Endpoint Test Results:</div>'
+        + results.map(function(r){
+          var ok = r.indexOf('"approved":true')>=0||r.indexOf('"completed":true')>=0||r.indexOf('HTTP 200')>=0;
+          return '<div style="background:'+(ok?'rgba(16,185,129,.1)':'rgba(239,68,68,.1)')+';border:1px solid '+(ok?'rgba(16,185,129,.3)':'rgba(239,68,68,.3)')+';border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:12px;font-family:monospace;word-break:break-all">'
+            +(ok?'&#x2705; ':'&#x274C; ')+r+'</div>';
+        }).join('')
+        + '<div style="margin-top:12px;font-size:12px;color:var(--text-3);line-height:1.8">'
+          + 'If you see <b style="color:#10b981">&#x2705;</b> on both → endpoints work<br>'
+          + 'If <b style="color:#ef4444">&#x274C;</b> → Check PI_API_KEY in Cloudflare Settings<br>'
+          + 'If 404/502 → Functions not deployed — push functions/ folder to GitHub'
+        + '</div>'
+      );
+    });
+  })
+  .catch(function(e){
+    openP('&#x1F527; Payment Diagnostics',
+      '<div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:12px;font-size:12px;color:#fca5a5">&#x274C; Endpoint unreachable: '+e.message+'<br><br>This means Functions are not deployed. Push the functions/ folder to GitHub.</div>'
+    );
   });
 }
 </script>
