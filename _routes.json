@@ -5,7 +5,8 @@
     "/complete",
     "/cancel-payment",
     "/ai",
-    "/alerts"
+    "/alerts",
+    "/pi-price"
   ],
   "exclude": []
 }

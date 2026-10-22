@@ -59,9 +59,23 @@
       var scr = document.querySelector('.scr.on .scroll') || document;
       cleanup(scr);
       if (fn === 'renderMyUNHCR') addSupportRow();
+      if (fn === 'renderHome' || fn === 'renderWallet') addPriceCard(fn);
       return r;
     };
   });
+
+
+  /* Live Pi price card (OKX first, then CoinGecko) on Home and Payments */
+  function addPriceCard(fn) {
+    if (!window.PiPrice) return;
+    var scr = document.getElementById(fn === 'renderHome' ? 'scr-home' : 'scr-wallet'); if (!scr || scr.querySelector('.hp-price')) return;
+    var box = document.createElement('div'); box.className = 'hp-price'; box.style.margin = '12px 16px 4px';
+    var after = null;
+    scr.querySelectorAll('div').forEach(function (d) { if (!after && /Independent application/.test(d.textContent) && d.children.length < 4 && d.textContent.length < 200) after = d; });
+    if (after && after.parentNode) after.parentNode.insertBefore(box, after.nextSibling);
+    else { var sb = scr.querySelector('.sbar'); if (sb && sb.nextSibling) sb.parentNode.insertBefore(box, sb.nextSibling); else scr.prepend(box); }
+    PiPrice.mount(box, { accent: '#1257B0', currency: 'USD' });
+  }
 
   /* 4. Five tabs: Payments lives in Profile as "Support the app" */
   function fixNav() {
