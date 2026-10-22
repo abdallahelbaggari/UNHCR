@@ -1,4 +1,4 @@
-/* UNHCR.pi — professional pass (v2.0, Oct 2026)
+/* UNHCR — professional pass (v2.0, Oct 2026)
    Loaded after the app's own script. It changes presentation only; every feature keeps working.
    • panel titles show their icon instead of code (&#x…;)
    • five tabs: Home, Emergency, Resources, Community, Profile (payments move into Profile)
@@ -77,7 +77,7 @@
     var el = document.getElementById('my-scroll'); if (!el || document.getElementById('hp-support')) return;
     var row = document.createElement('div');
     row.id = 'hp-support';
-    row.innerHTML = '<button class="hp-row" onclick="goTab(\'wallet\')"><span class="hp-ic">π</span><span class="hp-tx"><b>Support the app with Pi</b><small>Payments and history · goes to UNHCR.pi only</small></span><span class="hp-ch">›</span></button>';
+    row.innerHTML = '<button class="hp-row" onclick="goTab(\'wallet\')"><span class="hp-ic">π</span><span class="hp-tx"><b>Support the app with Pi</b><small>Supports this independent app · not a UN donation</small></span><span class="hp-ch">›</span></button>';
     var first = el.querySelector('.sh');
     el.insertBefore(row, first || el.firstChild);
   }

@@ -5,10 +5,13 @@
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#091A3A",
-  "theme_color": "#091A3A",
+  "background_color": "#F3F6FB",
+  "theme_color": "#FFFFFF",
   "lang": "en",
-  "categories": ["social", "utilities"],
+  "categories": [
+    "social",
+    "utilities"
+  ],
   "icons": [
     {
       "src": "assets/icons/logo.svg",

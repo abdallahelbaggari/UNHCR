@@ -4,7 +4,8 @@
     "/approve",
     "/complete",
     "/cancel-payment",
-    "/ai"
+    "/ai",
+    "/alerts"
   ],
   "exclude": []
 }

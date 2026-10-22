@@ -1,4 +1,4 @@
-/* UNHCR.pi — /cancel-payment — Cloudflare Pages Function
+/* UNHCR — /cancel-payment — Cloudflare Pages Function
    Pi Mainnet — sandbox:false */
 
 export async function onRequestGet(context) {
