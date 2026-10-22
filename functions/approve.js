@@ -44,6 +44,26 @@ export async function onRequestPost(context) {
       });
     }
 
+    /* Check the payment with Pi before approving it: a pass must be paid in full,
+       and every amount must be a real positive number. A rejected payment simply
+       expires and the user is not charged. */
+    try {
+      const chk = await fetch(`https://api.minepi.com/v2/payments/${paymentId}`, { headers: { 'Authorization': `Key ${apiKey}` } });
+      if (chk.ok) {
+        const pay = await chk.json();
+        const md = (pay && pay.metadata) || {};
+        const amt = Number(pay && pay.amount);
+        const PRICES = {'copa_pass': 1, 'spl_pass': 1, 'fan_pass': 1, 'pilgrim_pass': 1};
+        const st = (pay && pay.status) || {};
+        if (st.developer_approved) {
+          return new Response(JSON.stringify({ approved: true, step: 'already_approved' }), { status: 200, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+        }
+        if (!(amt > 0) || amt > 100000 || (PRICES[md.type] && amt + 1e-9 < PRICES[md.type])) {
+          console.warn('Payment rejected: amount does not match', paymentId, amt, md.type);
+          return new Response(JSON.stringify({ approved: false, error: 'Payment amount does not match the price' }), { status: 200, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+        }
+      }
+    } catch (e) { console.warn('Payment check skipped:', e && e.message); }
     const r = await fetch(`https://api.minepi.com/v2/payments/${paymentId}/approve`, {
       method: 'POST',
       headers: {
