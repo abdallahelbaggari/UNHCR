@@ -1,0 +1,25 @@
+/* UNHCR.pi — professional pass (v2.0): readable sizes, calmer layout, five-tab bar */
+/* text floor: the app writes many sizes as .45–.6rem inline; lift them to readable sizes */
+#app [style*="font-size:.4"], #app [style*="font-size: .4"] { font-size: 12px !important; }
+#app [style*="font-size:.5"], #app [style*="font-size: .5"] { font-size: 13px !important; line-height: 1.45 !important; }
+#app [style*="font-size:.6"], #app [style*="font-size: .6"] { font-size: 14px !important; }
+#app [style*="font-size:10px"], #app [style*="font-size:11px"] { font-size: 12px !important; }
+.pbody { font-size: 15px; }
+
+/* five equal tabs, one-line labels */
+#nav.hp-nav5 .nb { flex: 1 1 0; font-size: 11.5px; white-space: nowrap; min-width: 0; }
+#nav.hp-nav5 .nb-i { font-size: 22px; }
+
+/* new rows in the same style as the app */
+.hp-row { width: calc(100% - 32px); margin: 12px 16px 4px; display: flex; align-items: center; gap: 12px; text-align: left;
+  background: linear-gradient(135deg, rgba(14,165,233,.14), rgba(26,86,219,.12)); border: 1px solid rgba(14,165,233,.35);
+  border-radius: 16px; padding: 14px; color: var(--text-1); font: inherit; cursor: pointer; }
+.hp-ic { width: 42px; height: 42px; flex: none; border-radius: 12px; background: rgba(14,165,233,.18); color: #7dd3fc;
+  display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; }
+.hp-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.hp-tx b { font-size: 15px; }
+.hp-tx small { font-size: 12.5px; color: var(--text-2); }
+.hp-ch { font-size: 22px; color: var(--text-3); }
+.hp-back { margin: 10px 16px 0; border: 0; background: rgba(255,255,255,.06); color: var(--text-1); border-radius: 999px;
+  padding: 8px 14px; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+#app .badge-now{display:none!important}

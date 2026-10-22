@@ -1,4 +1,4 @@
-/* Humanitarian Hub — /cancel-payment — Cloudflare Pages Function
+/* UNHCR.pi — /cancel-payment — Cloudflare Pages Function
    Pi Mainnet — sandbox:false */
 
 export async function onRequestGet(context) {
