@@ -29,5 +29,5 @@ html.pw-on,html.pw-on body{overflow:hidden}
 @media (max-height:680px){.pw-txt h2{font-size:24px}.pw-txt p{font-size:14px;margin-top:6px}.pw-copy{margin-bottom:12px}.pw-pi{height:50px}.pw-guest{height:46px}}
 /* light panels: softer shadow, lighter guest border */
 #pw .pw-panel{box-shadow:0 -12px 30px -16px rgba(15,30,54,.35)}
-#pw .pw-guest{border-color:#C9D6E8;color:#1257B0}
+#pw .pw-guest{border-color:#D5DCE4;color:var(--pw-a)}
 #pw .pw-bars i{background:#E2E8F0}
