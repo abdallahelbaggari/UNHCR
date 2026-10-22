@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>/* Pi sandbox: true only when the app is opened inside the Pi Sandbox (desktop testing at sandbox.minepi.com); false in the Pi Browser. The same code runs as the mainnet and the testnet app: the network comes from the Pi app and its API key. */
+window.PI_SANDBOX=(function(){try{var r=document.referrer||'',a=location.ancestorOrigins?[].slice.call(location.ancestorOrigins).join(' '):'';return /sandbox\.minepi\.com/.test(r+' '+a);}catch(e){return false;}})();</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#091A3A">
@@ -925,7 +928,7 @@ body {
   <button id="loginBtn" onclick="piLogin()"><span id="signin-txt">Sign In with Pi</span></button>
   <button id="guestBtn" onclick="guestLogin()">Continue as Guest</button>
   <div id="lmsg"></div>
-  <div class="note">Independent community application. Not affiliated with UNHCR, the United Nations, or any government body. Pi Mainnet. sandbox:false.</div>
+  <div class="note">Independent community application. Not affiliated with UNHCR, the United Nations, or any government body. Pi Mainnet</div>
 </div>
 <div id="app">
 <div id="main">
@@ -1029,7 +1032,7 @@ function piLogin() {
     },600);
     return;
   }
-  Pi.init({version:'2.0', sandbox:false});
+  Pi.init({version:'2.0', sandbox: window.PI_SANDBOX});
   Pi.authenticate(['username','payments'], onIncompletePayment)
     .then(function(auth){
       piUser=auth.user;
@@ -1072,7 +1075,7 @@ function submitPiPayment(amount, memo){
   if(!piUser){toast('Please sign in to make payments');return;}
   if(piUser.isGuest){toast('Sign in with Pi to make payments');return;}
   if(typeof Pi==='undefined'){toast('Open in Pi Browser to make payments','e');return;}
-  try{Pi.init({version:'2.0',sandbox:false});}catch(e){}
+  try{Pi.init({version:'2.0',sandbox: window.PI_SANDBOX});}catch(e){}
   Pi.createPayment({
     amount: amount,
     memo: memo,
@@ -1109,7 +1112,7 @@ function submitPiPayment(amount, memo){
 
 function donatePi(amount){
   closeP();
-  submitPiPayment(amount,'Humanitarian Community Contribution');
+  submitPiPayment(amount,'Support Humanitarian Hub (the app)');
 }
 
 function donatePiCustom(){
@@ -1117,19 +1120,19 @@ function donatePiCustom(){
   var amt=parseFloat(el&&el.value||0);
   if(!amt||amt<0.01){toast('Enter a valid amount','e');return;}
   closeP();
-  submitPiPayment(amt,'Humanitarian Community Contribution');
+  submitPiPayment(amt,'Support Humanitarian Hub (the app)');
 }
 
 function submitPayment(){
   var amt=parseFloat((document.getElementById('pay-amt')&&document.getElementById('pay-amt').value)||0);
-  var memo=(document.getElementById('pay-memo')&&document.getElementById('pay-memo').value)||'Humanitarian contribution';
+  var memo=(document.getElementById('pay-memo')&&document.getElementById('pay-memo').value)||'Payment to Humanitarian Hub';
   if(!amt||amt<0.01){toast('Enter a valid amount','e');return;}
   closeP();
   submitPiPayment(amt,memo);
 }
 
 function showApp(){
-  if(typeof Pi!=='undefined'){try{Pi.init({version:'2.0',sandbox:false});}catch(e){}}
+  if(typeof Pi!=='undefined'){try{Pi.init({version:'2.0',sandbox: window.PI_SANDBOX});}catch(e){}}
   var L=document.getElementById('login'),A=document.getElementById('app');
   if(L)L.style.display='none';
   if(A){A.style.display='flex';A.style.flexDirection='column';}
@@ -1436,7 +1439,7 @@ function openResFood(){
 
 
 /* ================================================================
-   Humanitarian Hub v1.0 — Pi Mainnet — sandbox:false
+   Humanitarian Hub v1.0 — Pi Mainnet
    Independent community platform — not affiliated with UNHCR/UN
 ================================================================ */
 var piUser    = null;
@@ -1455,7 +1458,7 @@ window.addEventListener('load',function(){
 
 
 /* ================================================================
-   Humanitarian Hub — Pi Mainnet — sandbox:false
+   Humanitarian Hub — Pi Mainnet
    Independent community platform — not affiliated with UNHCR/UN
 ================================================================ */
 var piUser    = null;
@@ -1477,7 +1480,7 @@ window.addEventListener('load',function(){
 
 
 /* ================================================================
-   UNHCR v1.0 — Mainnet — sandbox:false
+   UNHCR v1.0 — Mainnet
    Login: Copa uploaded pattern (index__10_.html)
 ================================================================ */
 var piUser    = null;
@@ -1835,17 +1838,17 @@ function renderWallet(){
       +'<div class="w-action" onclick="openPayPi()">'
         +'<div class="wi">&#x2B06;&#xFE0F;</div>'
         +'<div class="wt">Pay with Pi</div>'
-        +'<div class="ws">Send Pi payment</div>'
+        +'<div class="ws">Pay Humanitarian Hub</div>'
       +'</div>'
       +'<div class="w-action" onclick="openDonatePi()">'
         +'<div class="wi">&#x2764;&#xFE0F;</div>'
-        +'<div class="wt">Donate Pi</div>'
+        +'<div class="wt">Support the app</div>'
         +'<div class="ws">Support the platform</div>'
       +'</div>'
     +'</div>'
     /* Quick donate */
     +'<div style="padding:0 16px 12px">'
-      +'<div class="sh" style="padding:0 0 10px">Quick Donation</div>'
+      +'<div class="sh" style="padding:0 0 10px">Support the app</div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px">'
         +'<button onclick="donatePi(1)" class="btn-o" style="min-height:56px;font-size:20px;font-weight:900;border-radius:14px">&#x03C0;1</button>'
         +'<button onclick="donatePi(5)" class="btn-p" style="min-height:56px;font-size:20px;font-weight:900;border-radius:14px">&#x03C0;5</button>'
@@ -3577,7 +3580,7 @@ function openDonatePi() {
     + '<label class="fl">Custom Amount (Pi)</label>'
     + '<input class="inp" id="donate-amt" type="number" min="0.01" step="0.01" placeholder="e.g. 3.0" style="font-size:18px;min-height:54px">'
     + '<button class="btn-p" style="margin-top:12px;min-height:56px;font-size:17px;background:linear-gradient(135deg,#059669,#10b981)" onclick="donatePiCustom()">&#x1F49A; Donate Pi</button>'
-    + '<div class="card card-blue" style="margin-top:12px"><div style="font-size:12px;color:var(--text-2);line-height:1.75">&#x2139;&#xFE0F; Contributions support this independent humanitarian platform. Not affiliated with UNHCR.</div></div>'
+    + '<div class="card card-blue" style="margin-top:12px"><div style="font-size:12px;color:var(--text-2);line-height:1.75">&#x2139;&#xFE0F; Payments support this independent app only. They are not passed on to refugees or aid agencies. Not affiliated with UNHCR.</div></div>'
   );
 }
 function openCustomDonate(){openDonatePi();}
@@ -3684,13 +3687,11 @@ function askAI() {
     msgs.innerHTML += '<div id="ai-typing" style="background:rgba(255,255,255,.05);border-radius:10px 10px 10px 2px;padding:10px 12px;margin-bottom:8px;font-size:13px;color:var(--text-2);line-height:1.7">&#x1F916; Thinking...</div>';
     msgs.scrollTop = msgs.scrollHeight;
   }
-  fetch('https://api.anthropic.com/v1/messages', {
+  fetch('/ai', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': '',
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
+      'Accept':'application/json'
     },
     body: JSON.stringify({
       model: 'claude-haiku-4-5-20251001',
@@ -3760,5 +3761,6 @@ function testPaymentEndpoints() {
   });
 }
 </script>
+<script>/* Testnet copy: same code, a clear label so nobody mistakes test Pi for real Pi */(function(){if(!/(^|[.-])testnet[.-]/i.test(location.hostname))return;document.title="[Testnet] "+document.title;var b=document.createElement("div");b.textContent="TESTNET";b.setAttribute("aria-label","Testnet: test Pi only");b.style.cssText="position:fixed;left:12px;bottom:calc(86px + env(safe-area-inset-bottom));z-index:99999;padding:3px 10px;border-radius:999px;background:#B45309;color:#fff;font:800 11px/1.4 system-ui,sans-serif;letter-spacing:.06em;pointer-events:none;opacity:.92";(document.body||document.documentElement).appendChild(b);})();</script>
 </body>
 </html>

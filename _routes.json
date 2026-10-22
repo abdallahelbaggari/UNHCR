@@ -3,7 +3,8 @@
   "include": [
     "/approve",
     "/complete",
-    "/cancel-payment"
+    "/cancel-payment",
+    "/ai"
   ],
   "exclude": []
 }
