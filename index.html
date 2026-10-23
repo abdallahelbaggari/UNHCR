@@ -1148,6 +1148,7 @@ function showApp(){
 function launchApp(){showApp();}
 
 function goTab(name,el){
+  if(name==='volunteer')name='community';   // volunteering lives on the Community screen
   document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});
   document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('on');});
   var scr=document.getElementById('scr-'+name);if(scr)scr.classList.add('on');
@@ -3011,13 +3012,16 @@ function showSym6(){symResult('&#x1FA7A; Clean wound with clean water. Apply pre
 function showSym7(){symResult('&#x1F9E0; You are not alone. Talk to a trusted person or counsellor. Crisis support: findahelpline.com. If in immediate danger — call 112. Rest, safe space, and support are available.');}
 
 function openNoticeBoard(){
-  var all=DEFAULT_NOTICES.concat(_notices).reverse();
-  var html='<button class="btn-p" style="margin-bottom:.65rem" onclick="openPostNotice()">&#x270F;&#xFE0F; Post a Notice</button>';
+  var E=function(x){return String(x==null?'':x).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+  var all=(_notices||[]).slice().reverse();
+  var html='<button class="btn-p" style="margin-bottom:.65rem" onclick="openPostNotice()">&#x270F;&#xFE0F; Post a Notice</button>'
+    +'<p style="font-size:12.5px;color:#64748B;margin:0 0 .7rem">Notices are saved on this phone. Use them as your own reminders or to prepare a message to share with your community.</p>';
+  if(!all.length) html+='<div style="text-align:center;padding:1.4rem .6rem;color:#64748B"><div style="font-size:2rem">&#x1F4CB;</div><b style="color:#0F172A">No notices yet</b><br><span style="font-size:13px">Tap “Post a Notice” to add the first one.</span></div>';
   all.forEach(function(n){
     html+='<div class="notice-card">'
-      +'<div class="notice-top"><div class="notice-title">'+n.title+'</div><div class="notice-date">'+n.date+'</div></div>'
-      +'<div class="notice-body">'+n.body+'</div>'
-      +'<div class="notice-foot"><span class="notice-author">by '+n.author+'</span><span class="pill pb">'+n.tag+'</span></div>'
+      +'<div class="notice-top"><div class="notice-title">'+E(n.title)+'</div><div class="notice-date">'+E(n.date)+'</div></div>'
+      +'<div class="notice-body">'+E(n.body)+'</div>'
+      +'<div class="notice-foot"><span class="notice-author">by '+E(n.author)+'</span><span class="pill pb">'+E(n.tag)+'</span></div>'
     +'</div>';
   });
   openP('&#x1F4CB; Notice Board',html);
@@ -3756,7 +3760,7 @@ function testPaymentEndpoints() {
 </script>
 <script>/* Testnet copy: same code, a clear label so nobody mistakes test Pi for real Pi */(function(){if(!/(^|[.-])testnet[.-]/i.test(location.hostname))return;document.title="[Testnet] "+document.title;var b=document.createElement("div");b.textContent="TESTNET";b.setAttribute("aria-label","Testnet: test Pi only");b.style.cssText="position:fixed;left:12px;bottom:calc(86px + env(safe-area-inset-bottom));z-index:99999;padding:3px 10px;border-radius:999px;background:#B45309;color:#fff;font:800 11px/1.4 system-ui,sans-serif;letter-spacing:.06em;pointer-events:none;opacity:.92";(document.body||document.documentElement).appendChild(b);})();</script>
 <script src="pi-price-widget.js?v=1"></script>
-<script src="hub-pro.js?v=4"></script>
+<script src="hub-pro.js?v=5"></script>
 <script>window.PRO_WELCOME={name:'UNHCR',loginSelector:'#login',signIn:'piLogin',guestIn:'guestLogin',guest:true,
  film:'films/welcome',logo:'logo.svg',accent:'#1257B0',accent2:'#0B63C4',panel:'#FFFFFF',ink:'#0F1E36',sub:'#5B6B82',
  legal:'Independent app. Not affiliated with UNHCR, the United Nations or any government.',

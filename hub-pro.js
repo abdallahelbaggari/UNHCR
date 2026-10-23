@@ -73,7 +73,7 @@
     var after = null;
     scr.querySelectorAll('div').forEach(function (d) { if (!after && /Independent application/.test(d.textContent) && d.children.length < 4 && d.textContent.length < 200) after = d; });
     if (after && after.parentNode) after.parentNode.insertBefore(box, after.nextSibling);
-    else { var sb = scr.querySelector('.sbar'); if (sb && sb.nextSibling) sb.parentNode.insertBefore(box, sb.nextSibling); else scr.prepend(box); }
+    else { var sc = scr.querySelector('.scroll'); if (sc) sc.insertBefore(box, sc.firstChild); else scr.prepend(box); }
     PiPrice.mount(box, { accent: '#1257B0', currency: 'USD' });
   }
 
