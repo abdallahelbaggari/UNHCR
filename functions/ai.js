@@ -46,7 +46,24 @@ async function anthropic(key, system, msgs) {
   return ((d.content || [])[0] || {}).text || '';
 }
 
+/* Abuse protection: only this app's pages may call /ai, plus a best-effort hourly allowance per visitor (salted hash, never the IP). */
+async function allowed(req) {
+  const origin = req.headers.get('Origin');
+  if (origin) { try { if (new URL(origin).host !== new URL(req.url).host) return 'This assistant only works inside the app.'; } catch (e) { return 'Bad request'; } }
+  try {
+    const hour = Math.floor(Date.now() / 3600e3), ip = req.headers.get('CF-Connecting-IP') || '0';
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('un-ai|' + hour + '|' + ip));
+    const k = Array.from(new Uint8Array(buf).slice(0, 12), (b) => b.toString(16).padStart(2, '0')).join('');
+    const key = new Request('https://rl.unhcr.internal/ai/' + k), c = caches.default;
+    const hit = await c.match(key), n = hit ? (+(await hit.text()) || 0) + 1 : 1;
+    await c.put(key, new Response(String(n), { headers: { 'Cache-Control': 'max-age=3600' } }));
+    if (n > 40) return 'You have asked a lot this hour. Please try again a little later.';
+  } catch (e) {}
+  return '';
+}
+
 export async function onRequestPost(context) {
+  { const block = await allowed(context.request); if (block) return new Response(JSON.stringify({ error: block }), { status: 200, headers: H }); }
   try {
     const env = context.env || {};
     const b = await context.request.json().catch(() => ({}));

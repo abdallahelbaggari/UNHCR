@@ -28,7 +28,7 @@ export async function onRequestPost(context) {
     const paymentId = body.paymentId;
     const txid = body.txid;
 
-    if (!paymentId || !txid) {
+    if (!paymentId || !txid || !/^[A-Za-z0-9_-]{6,80}$/.test(String(paymentId)) || !/^[A-Fa-f0-9]{64}$/.test(String(txid))) {
       return new Response(JSON.stringify({ completed: true, note: 'missing_params' }), {
         status: 200,
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }

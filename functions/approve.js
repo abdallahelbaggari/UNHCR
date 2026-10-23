@@ -28,8 +28,8 @@ export async function onRequestPost(context) {
     const body = await context.request.json();
     const paymentId = body.paymentId;
 
-    if (!paymentId) {
-      return new Response(JSON.stringify({ approved: false, error: 'Missing paymentId' }), {
+    if (!paymentId || !/^[A-Za-z0-9_-]{6,80}$/.test(String(paymentId))) {
+      return new Response(JSON.stringify({ approved: false, error: 'Missing or invalid paymentId' }), {
         status: 200,
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       });
