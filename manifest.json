@@ -1,6 +1,6 @@
 {
-  "name": "UNHCR",
-  "short_name": "UNHCR",
+  "name": "Humanitarian Hub",
+  "short_name": "HumHub",
   "description": "Independent Humanitarian Support Platform for the Pi Ecosystem",
   "start_url": "/",
   "display": "standalone",

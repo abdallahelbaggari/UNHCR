@@ -1,4 +1,4 @@
-/* UNHCR — /approve — Cloudflare Pages Function
+/* Humanitarian Hub — /approve — Cloudflare Pages Function
    Pi Mainnet — sandbox:false
    IMPORTANT: Always return status 200 — non-200 triggers "Payment Expired" */
 

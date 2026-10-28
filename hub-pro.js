@@ -1,4 +1,4 @@
-/* UNHCR — professional pass (v2.0, Oct 2026)
+/* Humanitarian Hub — professional pass (v2.0, Oct 2026)
    Loaded after the app's own script. It changes presentation only; every feature keeps working.
    • panel titles show their icon instead of code (&#x…;)
    • five tabs: Home, Emergency, Resources, Community, Profile (payments move into Profile)

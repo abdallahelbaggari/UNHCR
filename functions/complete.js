@@ -1,4 +1,4 @@
-/* UNHCR — /complete — Cloudflare Pages Function
+/* Humanitarian Hub — /complete — Cloudflare Pages Function
    Pi Mainnet — sandbox:false */
 
 export async function onRequestGet(context) {

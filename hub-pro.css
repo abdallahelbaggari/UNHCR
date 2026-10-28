@@ -1,4 +1,4 @@
-/* UNHCR.pi — professional pass (v2.0): readable sizes, calmer layout, five-tab bar */
+/* Humanitarian Hub — professional pass (v2.0): readable sizes, calmer layout, five-tab bar */
 /* text floor: the app writes many sizes as .45–.6rem inline; lift them to readable sizes */
 #app [style*="font-size:.4"], #app [style*="font-size: .4"] { font-size: 12px !important; }
 #app [style*="font-size:.5"], #app [style*="font-size: .5"] { font-size: 13px !important; line-height: 1.45 !important; }

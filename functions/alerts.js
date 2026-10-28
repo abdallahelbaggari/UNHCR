@@ -1,4 +1,4 @@
-/* UNHCR — /alerts — Cloudflare Pages Function
+/* Humanitarian Hub — /alerts — Cloudflare Pages Function
    Current disaster alerts from GDACS (Global Disaster Alert and Coordination System, UN & European Commission).
    Orange and red alerts from the last 21 days, newest first. Cached for 30 minutes.
    Optional: set RELIEFWEB_APPNAME (a ReliefWeb-approved appname) to add ReliefWeb's latest disasters. */
